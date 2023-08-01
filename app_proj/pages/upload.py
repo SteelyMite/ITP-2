@@ -48,6 +48,32 @@ layout = html.Div([
         ]),
         dbc.Row([
             dbc.Col([
+                html.Label('Data Cleaning Options:'),
+                dcc.Dropdown(
+                    id='data-cleaning-dropdown',
+                    options=[
+                        {'label': 'Handle Missing Values', 'value': 'handle_missing'},
+                        {'label': 'Remove Duplicates', 'value': 'remove_duplicates'}
+                    ],
+                    placeholder="Select an option",
+                    style={'width': '50%', 'margin': 'auto'}
+                ),
+                html.Button('Apply', id='data-cleaning-button', style={
+                    'width': '10%',
+                    'height': '60px',
+                    'lineHeight': '60px',
+                    'borderRadius': '5px',
+                    'textAlign': 'center',
+                    'margin': 'auto',
+                    'background': '#007bff',
+                    'color': 'white',
+                    'border': 'none',
+                    'cursor': 'pointer'
+                }),
+            ], className='text-center')
+        ]),
+        dbc.Row([
+            dbc.Col([
                 html.Label('Set Table Width (in %):'),
                 dcc.Slider(id='width-slider', min=10, max=100, value=50, step=1, marks={i: str(i) for i in range(10, 101, 10)}),
             ], width=12)
@@ -75,6 +101,7 @@ def parse_contents(contents, filename):
     try:
         if 'csv' in filename:
             df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+            # df = pd.read_csv('https://gist.githubusercontent.com/chriddyp/5d1ea79569ed194d432e56108a04d188/raw/a9f9e8076b837d541398e999dcbac2b2826a81f8/gdp-life-exp-2007.csv')
         elif 'xls' in filename:
             df = pd.read_excel(io.BytesIO(decoded))
         elif 'json' in filename:
@@ -157,3 +184,26 @@ def display_summary(n_clicks, data):
 def update_table_width(width_value):
     style_dict = {'width': f'{width_value}%', 'margin': 'auto'}
     return style_dict, style_dict
+    
+@app.callback(
+    Output('table', 'data'),
+    Input('data-cleaning-button', 'n_clicks'),
+    State('data-cleaning-dropdown', 'value'),
+    State('table', 'data'),
+    prevent_initial_call=True
+)
+def clean_data(n_clicks, cleaning_option, table_data):
+    if table_data is None:
+        raise dash.exceptions.PreventUpdate
+
+    df = pd.DataFrame(table_data)
+
+    if cleaning_option == 'handle_missing':
+        # You can define how you want to handle missing values here.
+        # For example, you might want to fill NaN values with zeros:
+        df.fillna(0, inplace=True)
+
+    elif cleaning_option == 'remove_duplicates':
+        df.drop_duplicates(inplace=True)
+
+    return df.to_dict('records')
