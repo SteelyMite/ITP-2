@@ -26,18 +26,14 @@ layout = html.Div([
             'textAlign': 'center',
             'margin': '10px'
         },
-        multiple=False  # Allow multiple files to be uploaded
+        multiple=False
     ),
-    dcc.Dropdown(
-        id='dropdown',
-        options=[
-            {'label': 'Scatter Plot', 'value': 'scatter'},
-            {'label': 'Line Chart', 'value': 'line'},
-            # Add more options here
-        ],
-        value='scatter'
-    ),
-    dcc.Graph(id='graph')
+    html.Div([
+        dcc.Graph(id='scatter-graph')
+    ], style={'margin-bottom': '20px'}),
+    html.Div([
+        dcc.Graph(id='line-graph')
+    ])
 ])
 
 def parse_contents(contents):
@@ -56,18 +52,25 @@ def update_output(contents):
     return df.to_json(date_format='iso', orient='split')
 
 @app.callback(
-    Output('graph', 'figure'),
-    Input('dropdown', 'value'),
+    Output('scatter-graph', 'figure'),
     Input('storage', 'data')
 )
-def update_graph(dropdown_value, data):
-    if data is None:  
+def update_scatter_graph(data):
+    if data is None:
         return dash.no_update
+
     df = pd.read_json(data, orient='split')
-    if dropdown_value == 'scatter':
-        fig = px.scatter(df, x="YEAR", y="Cesarean Delivery Rate", size="Drug Overdose Mortality per 100,000", color="STATE", hover_name="STATE")
-    elif dropdown_value == 'line':
-        fig = px.line(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE")
+    fig = px.scatter(df, x="YEAR", y="Cesarean Delivery Rate", size="Drug Overdose Mortality per 100,000", color="STATE", hover_name="STATE")
     return fig
 
+@app.callback(
+    Output('line-graph', 'figure'),
+    Input('storage', 'data')
+)
+def update_line_graph(data):
+    if data is None:
+        return dash.no_update
 
+    df = pd.read_json(data, orient='split')
+    fig = px.line(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE")
+    return fig
