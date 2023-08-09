@@ -112,22 +112,16 @@ layout = html.Div([
                 ),
             ], width=6)
         ], className='mb-3'),  # 'mb-3' is just to add some margin at the bottom
-
+        # data cleaning button
         dbc.Row([
             dbc.Col([
                 html.Button('Apply Data Cleaning', id='apply-cleaning-btn', className='btn btn-primary'),
             ], width=12, style={'textAlign': 'center'})
         ]),
-
-
+        # stat summary display button
         dbc.Row([
             dbc.Col([
-                html.Label('Set Table Width (in %):'),
-                dcc.Slider(id='width-slider', min=10, max=100, value=50, step=1, marks={i: str(i) for i in range(10, 101, 10)}),
-            ], width=12)
-        ]),
-        html.Div(id='output-data-upload'),
-        html.Button('Display Summary', id='display-button', style={
+                html.Button('Show or hide Summary', id='display-button', n_clicks=1, style={ 
                     'width': '30%',
                     'height': '60px',
                     'lineHeight': '60px',
@@ -139,7 +133,18 @@ layout = html.Div([
                     'border': 'none',
                     'cursor': 'pointer',
                 }),
-        html.Div(id='summary-output'),
+                html.Div(id='summary-output', style={'display': 'none'}),  # Hidden initially
+            ], style={'textAlign': 'center'})
+        ]),
+        # table width slider
+        dbc.Row([
+            dbc.Col([
+                html.Label('Set Table Width (in %):'),
+                dcc.Slider(id='width-slider', min=10, max=100, value=50, step=1, marks={i: str(i) for i in range(10, 101, 10)}),
+            ], width=12)
+        ]),
+        html.Div(id='output-data-upload'),
+        html.Div(id='intermediate-div', style={'display': 'none'})
     ])
 ])
 
@@ -162,18 +167,21 @@ def parse_contents(contents, file_type):
 
 def generate_summary_table(df):
     numerical_df = df.select_dtypes(include=['float64', 'int64'])
+    
     summary_stats = {
         'Min': numerical_df.min(),
         'Max': numerical_df.max(),
         'Mean': numerical_df.mean(),
         'Mode': numerical_df.mode().iloc[0]
     }
-    summary_df = pd.DataFrame(summary_stats)
+    
+    summary_df = pd.DataFrame(summary_stats).T  # Transpose the data so stats become rows
+    
     summary_table = dash_table.DataTable(
         data=summary_df.reset_index().to_dict('records'),
-        columns=[{'name': i, 'id': i} for i in ['index'] + list(summary_stats.keys())],
+        columns=[{'name': 'Statistic', 'id': 'index'}] + [{'name': i, 'id': i} for i in numerical_df.columns],
         style_table={'overflowX': 'auto'},
-        page_size=15 # Sets the number of rows per page
+        page_size=15  # Sets the number of rows per page
     )
     return summary_table
 
@@ -222,28 +230,40 @@ def save_to_file(n_clicks, rows, export_format):
         json_string = df_to_save.to_json(orient='records')
         return dict(content=json_string, filename="edited_data.json")
 
-
 @app.callback(
-    Output('summary-output', 'children'),
-    Input('display-button', 'n_clicks'),
+    [Output('summary-output', 'children'),
+     Output('summary-output', 'style'),
+     Output('output-data-upload', 'style')],
+    [Input('display-button', 'n_clicks'),
+     Input('intermediate-div', 'children')],
     State('table', 'data'),
+    State('summary-output', 'style'),
     prevent_initial_call=True
 )
-def display_summary(n_clicks, data):
-    if data is not None:
-        df = pd.DataFrame(data)
-        return generate_summary_table(df)
-    return None
+def display_summary(n_clicks, width_value, data, current_style):
+    ctx = dash.callback_context
+    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if triggered_id == 'display-button':
+        if data is None:
+            raise dash.exceptions.PreventUpdate
+
+        if current_style and current_style.get('display') == 'block':
+            return dash.no_update, {'display': 'none'}, dash.no_update
+        else:
+            df = pd.DataFrame(data)
+            return generate_summary_table(df), {'display': 'block'}, dash.no_update
+    elif triggered_id == 'intermediate-div':
+        style_dict = {'width': width_value, 'margin': 'auto'}
+        return dash.no_update, style_dict, style_dict
 
 @app.callback(
-    [Output('output-data-upload', 'style'),
-     Output('summary-output', 'style')],
+    Output('intermediate-div', 'children'),
     Input('width-slider', 'value'),
     prevent_initial_call=True
 )
 def update_table_width(width_value):
-    style_dict = {'width': f'{width_value}%', 'margin': 'auto'}
-    return style_dict, style_dict
+    return f'{width_value}%'
     
 @app.callback(
     Output('table', 'data'),
