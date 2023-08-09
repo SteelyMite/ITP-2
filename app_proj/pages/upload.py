@@ -29,7 +29,9 @@ layout = html.Div([
                     },
                     multiple=False
                 ),
+                dash_table.DataTable(id='datatable-upload-container')
             ], width=6),
+            
             dbc.Col([
                 html.Button('Save', id='save-button', style={
                     'width': '100%',
@@ -52,26 +54,48 @@ layout = html.Div([
                 dcc.Dropdown(
                     id='data-cleaning-dropdown',
                     options=[
-                        {'label': 'Handle Missing Values', 'value': 'handle_missing'},
-                        {'label': 'Remove Duplicates', 'value': 'remove_duplicates'}
+                        {'label': 'Remove Duplicates', 'value': 'remove_duplicates'},
+                        {'label': 'Handle Missing Values', 'value': 'handle_missing'}
                     ],
                     placeholder="Select an option",
-                    style={'width': '50%', 'margin': 'auto'}
+                    style={'width': '80%', 'margin': 'auto'}
                 ),
-                html.Button('Apply', id='data-cleaning-button', style={
-                    'width': '10%',
-                    'height': '60px',
-                    'lineHeight': '60px',
-                    'borderRadius': '5px',
-                    'textAlign': 'center',
-                    'margin': 'auto',
-                    'background': '#007bff',
-                    'color': 'white',
-                    'border': 'none',
-                    'cursor': 'pointer'
-                }),
             ], className='text-center')
         ]),
+
+        dbc.Row([
+            dbc.Col([
+                dcc.Dropdown(
+                    id='column-selector',
+                    # Options would be dynamically set based on your DataFrame
+                    options=[],
+                    placeholder="Select a column...",
+                    value=None,
+                    multi=True
+                ),
+            ], width=6),
+            dbc.Col([
+                dcc.Dropdown(
+                    id='missing-value-handler',
+                    options=[
+                        {'label': 'Replace with Max', 'value': 'max'},
+                        {'label': 'Replace with Min', 'value': 'min'},
+                        {'label': 'Replace with Mean', 'value': 'mean'},
+                        {'label': 'Replace with Zero', 'value': 'zero'},
+                    ],
+                    placeholder="Handle missing values by...",
+                    value=None
+                ),
+            ], width=6)
+        ], className='mb-3'),  # 'mb-3' is just to add some margin at the bottom
+
+        dbc.Row([
+            dbc.Col([
+                html.Button('Apply Data Cleaning', id='apply-cleaning-btn', className='btn btn-primary'),
+            ], width=12, style={'textAlign': 'center'})
+        ]),
+
+
         dbc.Row([
             dbc.Col([
                 html.Label('Set Table Width (in %):'),
@@ -187,23 +211,40 @@ def update_table_width(width_value):
     
 @app.callback(
     Output('table', 'data'),
-    Input('data-cleaning-button', 'n_clicks'),
+    Input('apply-cleaning-btn', 'n_clicks'),
     State('data-cleaning-dropdown', 'value'),
     State('table', 'data'),
+    State('column-selector', 'value'),
+    State('missing-value-handler', 'value'),
     prevent_initial_call=True
 )
-def clean_data(n_clicks, cleaning_option, table_data):
-    if table_data is None:
-        raise dash.exceptions.PreventUpdate
-
+def unified_cleaning(n_clicks, cleaning_option, table_data, selected_columns, handler):
     df = pd.DataFrame(table_data)
 
-    if cleaning_option == 'handle_missing':
-        # You can define how you want to handle missing values here.
-        # For example, you might want to fill NaN values with zeros:
-        df.fillna(0, inplace=True)
-
-    elif cleaning_option == 'remove_duplicates':
+    if cleaning_option == 'remove_duplicates':
         df.drop_duplicates(inplace=True)
+        
+    elif cleaning_option == 'handle_missing' and selected_columns and handler:
+        for col in selected_columns:  # Iterate over each selected column
+            if handler == 'max':
+                replacement = df[col].max()
+            elif handler == 'min':
+                replacement = df[col].min()
+            elif handler == 'mean':
+                replacement = df[col].mean()
+            elif handler == 'zero':
+                replacement = 0
+            df[col].fillna(replacement, inplace=True)
 
     return df.to_dict('records')
+
+@app.callback(
+    Output('column-selector', 'options'),
+    Input('table', 'data'),
+    prevent_initial_call=True
+)
+def set_column_options(table_data):
+    if table_data:
+        df = pd.DataFrame(table_data)
+        return [{'label': col, 'value': col} for col in df.columns]
+    return []
