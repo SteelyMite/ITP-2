@@ -46,6 +46,17 @@ layout = html.Div([
                 ##dash_table.DataTable(id='datatable-upload-container')
             ], width=6),
             dbc.Col([
+                dcc.Dropdown(
+                    id='export-format-dropdown',
+                    options=[
+                        {'label': 'CSV', 'value': 'csv'},
+                        {'label': 'Excel', 'value': 'xlsx'},
+                        {'label': 'JSON', 'value': 'json'}
+                    ],
+                    value='csv',
+                    clearable=False,
+                    style={'marginBottom': '10px'}
+                ),
                 html.Button('Save', id='save-button', style={
                     'width': '100%',
                     'height': '60px',
@@ -187,17 +198,30 @@ def update_output(contents, file_type):    # Receive the file_type as a paramete
         
 @app.callback(
     Output('download', 'data'),
-    Input('save-button', 'n_clicks'),
-    State('table', 'data'),
+    [Input('save-button', 'n_clicks')],
+    [State('table', 'data'), State('export-format-dropdown', 'value')],
     prevent_initial_call=True
 )
-def save_to_file(n_clicks, rows):
+def save_to_file(n_clicks, rows, export_format):
     if n_clicks is None:
         raise dash.exceptions.PreventUpdate
 
     df_to_save = pd.DataFrame(rows)
-    csv_string = df_to_save.to_csv(index=False, encoding='utf-8')
-    return dict(content=csv_string, filename="edited_data.csv")
+    
+    if export_format == 'csv':
+        csv_string = df_to_save.to_csv(index=False, encoding='utf-8')
+        return dict(content=csv_string, filename="edited_data.csv")
+    elif export_format == 'xlsx':
+        xlsx_io = io.BytesIO()
+        df_to_save.to_excel(xlsx_io, index=False, engine='openpyxl')
+        xlsx_io.seek(0)
+        # Encode the Excel data to base64
+        xlsx_base64 = base64.b64encode(xlsx_io.getvalue()).decode('utf-8')
+        return dict(content=xlsx_base64, filename="edited_data.xlsx", type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", base64=True)
+    elif export_format == 'json':
+        json_string = df_to_save.to_json(orient='records')
+        return dict(content=json_string, filename="edited_data.json")
+
 
 @app.callback(
     Output('summary-output', 'children'),
