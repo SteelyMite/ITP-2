@@ -1,6 +1,7 @@
 import base64
 import io
 import dash
+import plotly.express as px
 from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
@@ -19,11 +20,20 @@ layout = html.Div([
                         {'label': 'JSON', 'value': 'json'}
                     ],
                     placeholder="Select file type...",
-                    value=None
+                    value='csv',
+                    style={
+                        'alignItems': 'center',
+                        'justifyContent': 'center',
+                        'width': '100%',
+                        'height': '60px',
+                        'borderWidth': '1px',
+                        'borderRadius': '5px',
+                        'margin': '10px'
+                    }
                 ),
                 html.Div(id='upload-container'),  # This will house the Upload component
                 dash_table.DataTable(id='datatable-upload-container')
-            ], width=6),
+            ], width=2),
             dbc.Col([
                 dcc.Upload(
                     id='upload-data',
@@ -43,8 +53,7 @@ layout = html.Div([
                     },
                     multiple=False
                 ),
-                ##dash_table.DataTable(id='datatable-upload-container')
-            ], width=6),
+            ], width=4),
             dbc.Col([
                 dcc.Dropdown(
                     id='export-format-dropdown',
@@ -55,8 +64,18 @@ layout = html.Div([
                     ],
                     value='csv',
                     clearable=False,
-                    style={'marginBottom': '10px'}
+                    style={
+                        'alignItems': 'center',
+                        'justifyContent': 'center',
+                        'width': '100%',
+                        'height': '60px',
+                        'borderWidth': '1px',
+                        'borderRadius': '5px',
+                        'margin': '10px'
+                    }
                 ),
+            ], width=2),
+            dbc.Col([
                 html.Button('Save', id='save-button', style={
                     'width': '100%',
                     'height': '60px',
@@ -70,72 +89,9 @@ layout = html.Div([
                     'cursor': 'pointer',
                 }),
                 dcc.Download(id="download")
-            ], width=6)
-        ]),
-        dbc.Row([
-            dbc.Col([
-                html.Label('Data Cleaning Options:'),
-                dcc.Dropdown(
-                    id='data-cleaning-dropdown',
-                    options=[
-                        {'label': 'Remove Duplicates', 'value': 'remove_duplicates'},
-                        {'label': 'Handle Missing Values', 'value': 'handle_missing'}
-                    ],
-                    placeholder="Select an option",
-                    style={'width': '80%', 'margin': 'auto'}
-                ),
-            ], className='text-center')
+            ], width=4)    
         ]),
 
-        dbc.Row([
-            dbc.Col([
-                dcc.Dropdown(
-                    id='column-selector',
-                    # Options would be dynamically set based on your DataFrame
-                    options=[],
-                    placeholder="Select a column...",
-                    value=None,
-                    multi=True
-                ),
-            ], width=6),
-            dbc.Col([
-                dcc.Dropdown(
-                    id='missing-value-handler',
-                    options=[
-                        {'label': 'Replace with Max', 'value': 'max'},
-                        {'label': 'Replace with Min', 'value': 'min'},
-                        {'label': 'Replace with Mean', 'value': 'mean'},
-                        {'label': 'Replace with Zero', 'value': 'zero'},
-                    ],
-                    placeholder="Handle missing values by...",
-                    value=None
-                ),
-            ], width=6)
-        ], className='mb-3'),  # 'mb-3' is just to add some margin at the bottom
-        # data cleaning button
-        dbc.Row([
-            dbc.Col([
-                html.Button('Apply Data Cleaning', id='apply-cleaning-btn', className='btn btn-primary'),
-            ], width=12, style={'textAlign': 'center'})
-        ]),
-        # stat summary display button
-        dbc.Row([
-            dbc.Col([
-                html.Button('Show or hide Summary', id='display-button', n_clicks=1, style={ 
-                    'width': '30%',
-                    'height': '60px',
-                    'lineHeight': '60px',
-                    'borderRadius': '5px',
-                    'textAlign': 'center',
-                    'margin': '10px',
-                    'background': '#007bff',
-                    'color': 'white',
-                    'border': 'none',
-                    'cursor': 'pointer',
-                }),
-                html.Div(id='summary-output', style={'display': 'none'}),  # Hidden initially
-            ], style={'textAlign': 'center'})
-        ]),
         # table width slider
         dbc.Row([
             dbc.Col([
@@ -144,6 +100,7 @@ layout = html.Div([
             ], width=12)
         ]),
         html.Div(id='output-data-upload'),
+        html.Div(id='summary-output'),
         html.Div(id='intermediate-div', style={'display': 'none'})
     ])
 ])
@@ -165,37 +122,57 @@ def parse_contents(contents, file_type):
         return None
     return df
 
-def generate_summary_table(df):
-    numerical_df = df.select_dtypes(include=['float64', 'int64'])
-    
-    summary_stats = {
-        'Min': numerical_df.min(),
-        'Max': numerical_df.max(),
-        'Mean': numerical_df.mean(),
-        'Mode': numerical_df.mode().iloc[0]
-    }
-    
-    summary_df = pd.DataFrame(summary_stats).T  # Transpose the data so stats become rows
-    
-    summary_table = dash_table.DataTable(
-        data=summary_df.reset_index().to_dict('records'),
-        columns=[{'name': 'Statistic', 'id': 'index'}] + [{'name': i, 'id': i} for i in numerical_df.columns],
-        style_table={'overflowX': 'auto'},
-        page_size=15  # Sets the number of rows per page
-    )
-    return summary_table
+def generate_column_summary_box(df, column_name):
+    # Calculate statistics
+    nan_count = df[column_name].isna().sum()
+
+    if pd.api.types.is_numeric_dtype(df[column_name]):
+        # Generate bar graph for numeric columns
+        fig = px.bar(df, x=column_name)
+        min_val = df[column_name].min()
+        max_val = df[column_name].max()
+        mean_val = df[column_name].mean()
+
+        return dbc.Card([
+            dbc.CardHeader(column_name),
+            dbc.CardBody([
+                dcc.Graph(figure=fig, style={'height': '150px'}),
+                html.P(f"NaN values: {nan_count}"),
+                html.P(f"Min: {min_val}"),
+                html.P(f"Max: {max_val}"),
+                html.P(f"Mean: {mean_val}")
+            ])
+        ])
+
+    else:
+        # For non-numeric columns, display NaN values, most frequent string, and least frequent string
+        fig = px.pie(df, names=column_name)
+        value_counts = df[column_name].value_counts()
+        most_frequent_string = value_counts.index[0] if not value_counts.empty else "N/A"
+        least_frequent_string = value_counts.index[-1] if not value_counts.empty else "N/A"
+        
+        return dbc.Card([
+            dbc.CardHeader(column_name),
+            dbc.CardBody([
+                dcc.Graph(figure=fig, style={'height': '150px'}),
+                html.P(f"NaN values: {nan_count}"),
+                html.P(f"Most Frequent: {most_frequent_string}"),
+                html.P(f"Least Frequent: {least_frequent_string}")
+            ])
+        ])
 
 @app.callback(
-    Output('output-data-upload', 'children'),
+    [Output('output-data-upload', 'children'), Output('summary-output', 'children')],
     Input('upload-data', 'contents'),
-    State('file-type-dropdown', 'value'),   # Use the dropdown value as a state 
+    State('file-type-dropdown', 'value'),
     prevent_initial_call=True
 )
-def update_output(contents, file_type):    # Receive the file_type as a parameter
+def update_output(contents, file_type):
     if contents is not None:
-        df = parse_contents(contents, file_type)  # Use the file_type instead of name
+        df = parse_contents(contents, file_type)
         if df is not None:
-            return dash_table.DataTable(
+            # Generate the datatable
+            data_table = dash_table.DataTable(
                 id='table',
                 data=df.to_dict('records'),
                 columns=[{'name': i, 'id': i, 'editable': True} for i in df.columns],
@@ -203,6 +180,25 @@ def update_output(contents, file_type):    # Receive the file_type as a paramete
                 editable=True,
                 page_size=15
             )
+            
+            # Generate the summary boxes
+            summary_boxes = [generate_column_summary_box(df, column_name) for column_name in df.columns]
+
+            # Arrange the summary boxes in a 2-box-per-row layout
+            rows = []
+            for i in range(0, len(summary_boxes), 2):  # Step by 2 for pairs
+                box1 = summary_boxes[i]
+                # Check if there's a second box in the pair, if not, just use an empty Div
+                box2 = summary_boxes[i+1] if (i+1) < len(summary_boxes) else html.Div()
+                row = dbc.Row([
+                    dbc.Col(box1, width=6),
+                    dbc.Col(box2, width=6)
+                ])
+                rows.append(row)
+
+            return data_table, rows
+        
+    return None, None
         
 @app.callback(
     Output('download', 'data'),
@@ -229,33 +225,6 @@ def save_to_file(n_clicks, rows, export_format):
     elif export_format == 'json':
         json_string = df_to_save.to_json(orient='records')
         return dict(content=json_string, filename="edited_data.json")
-
-@app.callback(
-    [Output('summary-output', 'children'),
-     Output('summary-output', 'style'),
-     Output('output-data-upload', 'style')],
-    [Input('display-button', 'n_clicks'),
-     Input('intermediate-div', 'children')],
-    State('table', 'data'),
-    State('summary-output', 'style'),
-    prevent_initial_call=True
-)
-def display_summary(n_clicks, width_value, data, current_style):
-    ctx = dash.callback_context
-    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
-
-    if triggered_id == 'display-button':
-        if data is None:
-            raise dash.exceptions.PreventUpdate
-
-        if current_style and current_style.get('display') == 'block':
-            return dash.no_update, {'display': 'none'}, dash.no_update
-        else:
-            df = pd.DataFrame(data)
-            return generate_summary_table(df), {'display': 'block'}, dash.no_update
-    elif triggered_id == 'intermediate-div':
-        style_dict = {'width': width_value, 'margin': 'auto'}
-        return dash.no_update, style_dict, style_dict
 
 @app.callback(
     Output('intermediate-div', 'children'),
@@ -293,14 +262,3 @@ def unified_cleaning(n_clicks, cleaning_option, table_data, selected_columns, ha
             df[col].fillna(replacement, inplace=True)
 
     return df.to_dict('records')
-
-@app.callback(
-    Output('column-selector', 'options'),
-    Input('table', 'data'),
-    prevent_initial_call=True
-)
-def set_column_options(table_data):
-    if table_data:
-        df = pd.DataFrame(table_data)
-        return [{'label': col, 'value': col} for col in df.columns]
-    return []
