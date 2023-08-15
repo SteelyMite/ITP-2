@@ -7,11 +7,13 @@ import pandas as pd
 import base64
 import io
 from app import app
+import dash_bootstrap_components as dbc
 
-layout = html.Div([
+layout =html.Div([
     dcc.Store(id='storage'),
-    dcc.Store(id='graphs-storage', data={'graphs': []}), # To keep track of the existing graphs
-    html.Button('Click to Upload', id='upload-button'),
+    dcc.Store(id='graphs-storage', data={'graphs': []}),  
+
+    # upload
     html.Div(id='upload-menu', style={'display': 'none'}),
     dcc.Upload(
         id='upload-data',
@@ -31,15 +33,57 @@ layout = html.Div([
         },
         multiple=False
     ),
+
+    # selection
+    dbc.Row([
+        dbc.Col([
+            html.Label('Select column for visualization:'),
+            dcc.Dropdown(
+                id='visualization-column-dropdown',
+                options=[],
+                placeholder="Select a column...",
+                value=None
+            ),
+        ], width=6),
+        dbc.Col([
+            html.Label('Select visualization type:'),
+            dcc.Dropdown(
+                id='visualization-type-dropdown',
+                options=[
+                    {'label': 'Bar Chart', 'value': 'bar'},
+                    {'label': 'Pie Chart', 'value': 'pie'},
+                ],
+                placeholder="Select a type...",
+                value=None
+            ),
+        ], width=6)
+    ], className='mb-4'),  #spacing
+
+    # Visualization
+    dbc.Row([
+        dbc.Col([
+            dcc.Graph(id='visualization-graph')  # display the selected visualization
+        ])
+    ], className='mb-4'),
+
+    # graphs
+    html.Label('Choose type of graph to add:', className='mb-2'),
     dcc.Dropdown(
         id='graph-selector',
         options=[
             {'label': 'Scatter Plot', 'value': 'scatter'},
-            {'label': 'Line Plot', 'value': 'line'}
+            {'label': 'Line Plot', 'value': 'line'},
+            {'label': 'Bar Chart', 'value': 'bar'},
+            {'label': 'Pie Chart', 'value': 'pie'},
+            {'label': 'Histogram', 'value': 'histogram'},
+            {'label': 'Box Plot', 'value': 'box'},
+            {'label': '3D Scatter Plot', 'value': '3dscatter'},
+            {'label': 'Area Plot', 'value': 'area'},
+            {'label': 'Violin Plot', 'value': 'violin'}
         ],
         style={'width': '50%'}
     ),
-    html.Button('Add', id='add-button'),
+    html.Button('Add', id='add-button', className='mt-3 mb-4'),  #spacing
     html.Div(id='graphs-container')
 ])
 
@@ -58,17 +102,28 @@ def add_graph(n_clicks, graph_type, data, existing_graphs):
     df = pd.read_json(data, orient='split')
 
     if graph_type == 'scatter':
-        fig = px.scatter(df, x="YEAR", y="Cesarean Delivery Rate", size="Drug Overdose Mortality per 100,000", color="STATE", hover_name="STATE")
+        fig = px.scatter(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE", hover_name="STATE")
     elif graph_type == 'line':
         fig = px.line(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE")
     elif graph_type == 'bar':
         fig = px.bar(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE")
     elif graph_type == 'pie':
         fig = px.pie(df, names="STATE", values="Cesarean Delivery Rate")
+    elif graph_type == 'histogram':
+        fig = px.histogram(df, x="Cesarean Delivery Rate", color="STATE") 
+    elif graph_type == 'box':
+        fig = px.box(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE") 
+    elif graph_type == '3dscatter':
+        fig = px.scatter_3d(df, x="YEAR", y="Cesarean Delivery Rate", z="Drug Overdose Mortality per 100,000", color="STATE") 
+    elif graph_type == 'area':
+        fig = px.area(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE")
+    elif graph_type == 'violin':
+        fig = px.violin(df, y="Cesarean Delivery Rate", color="STATE")
 
     existing_graphs['graphs'].append(html.Div(dcc.Graph(figure=fig)))
 
     return existing_graphs['graphs']
+
 
 def parse_contents(contents):
     content_type, content_string = contents.split(',')
@@ -79,6 +134,8 @@ def parse_contents(contents):
     Output('storage', 'data'),
     Input('upload-data', 'contents'),
 )
+
+
 def update_output(contents):
     if contents is None:
         return dash.no_update
@@ -86,28 +143,46 @@ def update_output(contents):
     return df.to_json(date_format='iso', orient='split')
 
 @app.callback(
-    Output('button-menu', 'children'),
-    Output('button-menu', 'style'),
-    Input('upload-button', 'n_clicks'),
-    prevent_initial_call=True
-)
-def display_button_menu(n_clicks):
-    if n_clicks is not None:
-        return html.Div([
-            html.Button('1', id='button-1'),
-            html.Button('2', id='button-2'),
-            html.Button('3', id='button-3'),
-        ]), {'display': 'block'}
-    return dash.no_update, dash.no_update
-
-@app.callback(
-    [Output('button-excel', 'style'),
-     Output('button-csv', 'style'),
-     Output('button-csv-non-delimited', 'style')],
+    [Output('upload-menu', 'children'),
+     Output('upload-menu', 'style')],
     Input('upload-button', 'n_clicks'),
     prevent_initial_call=True
 )
 def display_upload_menu(n_clicks):
-    if n_clicks is not None:
+ if n_clicks is not None:
         return {'display': 'block'}, {'display': 'block'}, {'display': 'block'}
-    return {'display': 'none'}, {'display': 'none'}, {'display': 'none'}
+
+@app.callback(
+    Output('visualization-column-dropdown', 'options'),
+    Input('storage', 'data'),
+    prevent_initial_call=True
+)
+def set_column_options(data):
+    if data:
+        df = pd.read_json(data, orient='split')
+        options = [{'label': col, 'value': col} for col in df.columns]
+        return options
+    return []
+
+@app.callback(
+    Output('visualization-graph', 'figure'),
+    Input('visualization-column-dropdown', 'value'),
+    Input('visualization-type-dropdown', 'value'),
+    State('storage', 'data'),
+    prevent_initial_call=True
+)
+def update_visualization(selected_column, visualization_type, data):
+    if data is None or selected_column is None or visualization_type is None:
+        return dash.no_update
+
+    df = pd.read_json(data, orient='split')
+
+    if visualization_type == 'bar':
+        value_counts = df[selected_column].value_counts()
+        fig = px.bar(x=value_counts.index, y=value_counts.values, labels={'x': selected_column, 'y': 'count'})
+
+    elif visualization_type == 'pie':
+        value_counts = df[selected_column].value_counts()
+        fig = px.pie(names=value_counts.index, values=value_counts.values)
+
+    return fig
