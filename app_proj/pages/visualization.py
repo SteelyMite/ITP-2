@@ -9,93 +9,103 @@ import io
 from app import app
 import dash_bootstrap_components as dbc
 
-layout =html.Div([
+selected_graphs_list = []
+
+
+df = pd.DataFrame({
+    'X': [1, 2, 3, 4, 5],
+    'Y': [5, 4, 3, 2, 1]
+})
+
+
+
+layout = html.Div([
     dcc.Store(id='storage'),
-    dcc.Store(id='graphs-storage', data={'graphs': []}),  
+    dcc.Store(id='graphs-storage', data={'graphs': []}),
 
     # upload
     html.Div(id='upload-menu', style={'display': 'none'}),
-         dbc.Row([
-            dbc.Col([
-                dcc.Dropdown(
-                    id='file-type-dropdown',
-                    options=[
-                        {'label': 'CSV', 'value': 'csv'},
-                        {'label': 'Excel', 'value': 'excel'},
-                        {'label': 'JSON', 'value': 'json'}
-                    ],
-                    placeholder="Select file type...",
-                    value='csv',
-                    style={
-                        'alignItems': 'center',
-                        'justifyContent': 'center',
-                        'width': '100%',
-                        'height': '60px',
-                        'borderWidth': '1px',
-                        'borderRadius': '5px',
-                        'margin': '10px'
-                    }
-                ),
-                html.Div(id='upload-container'), 
-                dash_table.DataTable(id='datatable-upload-container')
-            ], width=2),
-            dbc.Col([
-                dcc.Upload(
-                    id='upload-data',
-                    children=html.Div([
-                        'Drag and Drop or ',
-                        html.A('Select Files')
-                    ]),
-                    style={
-                        'width': '100%',
-                        'height': '60px',
-                        'lineHeight': '60px',
-                        'borderWidth': '1px',
-                        'borderStyle': 'dashed',
-                        'borderRadius': '5px',
-                        'textAlign': 'center',
-                        'margin': '10px'
-                    },
-                    multiple=False
-                ),
-            ], width=4),
-            dbc.Col([
-                dcc.Dropdown(
-                    id='export-format-dropdown',
-                    options=[
-                        {'label': 'CSV', 'value': 'csv'},
-                        {'label': 'Excel', 'value': 'xlsx'},
-                        {'label': 'JSON', 'value': 'json'}
-                    ],
-                    value='csv',
-                    clearable=False,
-                    style={
-                        'alignItems': 'center',
-                        'justifyContent': 'center',
-                        'width': '100%',
-                        'height': '60px',
-                        'borderWidth': '1px',
-                        'borderRadius': '5px',
-                        'margin': '10px'
-                    }
-                ),
-            ], width=2),
-            dbc.Col([
-                html.Button('Save', id='save-button', style={
+    dbc.Row([
+        dbc.Col([
+            dcc.Dropdown(
+                id='file-type-dropdown',
+                options=[
+                    {'label': 'CSV', 'value': 'csv'},
+                    {'label': 'Excel', 'value': 'excel'},
+                    {'label': 'JSON', 'value': 'json'}
+                ],
+                placeholder="Select file type...",
+                value='csv',
+                style={
+                    'alignItems': 'center',
+                    'justifyContent': 'center',
+                    'width': '100%',
+                    'height': '60px',
+                    'borderWidth': '1px',
+                    'borderRadius': '5px',
+                    'margin': '10px'
+                }
+            ),
+            html.Div(id='upload-container'),
+            dash_table.DataTable(id='datatable-upload-container')
+        ], width=2),
+        dbc.Col([
+            dcc.Upload(
+                id='upload-data',
+                children=html.Div([
+                    'Drag and Drop or ',
+                    html.A('Select Files')
+                ]),
+                style={
                     'width': '100%',
                     'height': '60px',
                     'lineHeight': '60px',
+                    'borderWidth': '1px',
+                    'borderStyle': 'dashed',
                     'borderRadius': '5px',
                     'textAlign': 'center',
-                    'margin': '10px',
-                    'background': '#007bff',
-                    'color': 'white',
-                    'border': 'none',
-                    'cursor': 'pointer',
-                }),
-                dcc.Download(id="download")
-            ], width=4)    
-        ]),
+                    'margin': '10px'
+                },
+                multiple=False
+            ),
+        ], width=4),
+        dbc.Col([
+            dcc.Dropdown(
+                id='export-format-dropdown',
+                options=[
+                    {'label': 'CSV', 'value': 'csv'},
+                    {'label': 'Excel', 'value': 'xlsx'},
+                    {'label': 'JSON', 'value': 'json'}
+                ],
+                value='csv',
+                clearable=False,
+                style={
+                    'alignItems': 'center',
+                    'justifyContent': 'center',
+                    'width': '100%',
+                    'height': '60px',
+                    'borderWidth': '1px',
+                    'borderRadius': '5px',
+                    'margin': '10px'
+                }
+            ),
+        ], width=2),
+        dbc.Col([
+            html.Button('Save', id='save-button', style={
+                'width': '100%',
+                'height': '60px',
+                'lineHeight': '60px',
+                'borderRadius': '5px',
+                'textAlign': 'center',
+                'margin': '10px',
+                'background': '#007bff',
+                'color': 'white',
+                'border': 'none',
+                'cursor': 'pointer',
+            }),
+            dcc.Download(id="download")
+        ], width=4)
+    ]),
     # selection
     dbc.Row([
         dbc.Col([
@@ -119,15 +129,13 @@ layout =html.Div([
                 value=None
             ),
         ], width=6)
-    ], className='mb-4'),  #spacing
-
+    ], className='mb-4'),  # spacing
     # Visualization
     dbc.Row([
         dbc.Col([
             dcc.Graph(id='visualization-graph')  # display the selected visualization
         ])
     ], className='mb-4'),
-
     # graphs
     html.Label('Choose type of graph to add:', className='mb-2'),
     dcc.Dropdown(
@@ -145,9 +153,37 @@ layout =html.Div([
         ],
         style={'width': '50%'}
     ),
-    html.Button('Add', id='add-button', className='mt-3 mb-4'),  #spacing
-    html.Div(id='graphs-container')
+
+    html.Button('Add', id='add-button', className='mt-3 mb-4'),  # spacing
+    html.Div(id='graphs-container'),
+
+     dcc.Dropdown(
+        id='graph-selector',
+        options=[
+            {'label': 'Scatter Plot', 'value': 'scatter'},
+            {'label': 'Line Plot', 'value': 'line'},
+            {'label': 'Bar Chart', 'value': 'bar'},
+            {'label': 'Pie Chart', 'value': 'pie'},
+            {'label': 'Histogram', 'value': 'histogram'},
+            {'label': 'Box Plot', 'value': 'box'},
+            {'label': '3D Scatter Plot', 'value': '3dscatter'},
+            {'label': 'Area Plot', 'value': 'area'},
+            {'label': 'Violin Plot', 'value': 'violin'}        ],
+        value='scatter'  # default value
+    ),
+    html.Button('Add to List', id='add-to-list-button'),
+    html.Div(id='graph-type-table')
+
+
+
 ])
+
+
+#############################
+#############################
+#############################
+#############################
+#############################
 
 @app.callback(
     Output('graphs-container', 'children'),
@@ -248,3 +284,50 @@ def update_visualization(selected_column, visualization_type, data):
         fig = px.pie(names=value_counts.index, values=value_counts.values)
 
     return fig
+
+
+
+#######
+@app.callback(
+    Output('graph-type-table', 'children'),
+    Input('add-to-list-button', 'n_clicks'),
+    State('graph-selector', 'value'),
+    prevent_initial_call=True
+)
+def update_selected_graph_table(n_clicks, selected_graph):
+    global selected_graphs_list
+
+    selected_graphs_list.append(selected_graph)
+
+    df = pd.DataFrame(selected_graphs_list, columns=['Selected Graph Type'])
+
+    table = dash_table.DataTable(
+        columns=[{'name': i, 'id': i} for i in df.columns],
+        data=df.to_dict('records')
+    )
+
+    return table
+
+
+@app.callback(
+    Output('graph-container', 'children'),
+    Input('add-graph-button', 'n_clicks'),
+    State('graph-selector', 'value'),
+    State('graph-container', 'children'),
+    prevent_initial_call=True
+)
+def display_selected_graph(n_clicks, selected_graph, existing_graphs):
+    if not existing_graphs:
+        existing_graphs = []
+    
+    # Create the actual graph based on the type selected
+    if selected_graph == 'scatter':
+        fig = px.scatter(df, x='X', y='Y')
+    elif selected_graph == 'line':
+        fig = px.line(df, x='X', y='Y')
+    # ... add more graph types as necessary
+
+    new_graph = dcc.Graph(figure=fig)
+    existing_graphs.append(new_graph)
+
+    return existing_graphs
