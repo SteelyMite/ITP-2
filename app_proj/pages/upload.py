@@ -1,9 +1,10 @@
 import base64
 import io
 import dash
+import json
 import plotly.express as px
 from dash import dcc, html, dash_table
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output, State, ALL
 import dash_bootstrap_components as dbc
 import pandas as pd
 from app import app
@@ -91,14 +92,6 @@ layout = html.Div([
                 dcc.Download(id="download")
             ], width=4)    
         ]),
-
-        # table width slider
-        dbc.Row([
-            dbc.Col([
-                html.Label('Set Table Width (in %):'),
-                dcc.Slider(id='width-slider', min=10, max=100, value=50, step=1, marks={i: str(i) for i in range(10, 101, 10)}),
-            ], width=12)
-        ]),
         html.Div(id='output-data-upload'),
         html.Div(id='summary-output'),
         html.Div(id='intermediate-div', style={'display': 'none'})
@@ -133,9 +126,36 @@ def generate_column_summary_box(df, column_name):
         min_val = df[column_name].min()
         max_val = df[column_name].max()
         mean_val = df[column_name].mean()
+        data_cleaning_options = [
+            {"label": "Replace NaN with Min", "value": "min"},
+            {"label": "Replace NaN with Max", "value": "max"},
+            {"label": "Replace NaN with Mean", "value": "mean"},
+            {"label": "Replace NaN with Zero", "value": "zero"},
+        ]
 
+        dropdown_menu = dbc.DropdownMenu(
+            label="Options",
+            children=[
+                dbc.DropdownMenuItem("Change data type", header=True),
+                dbc.DropdownMenuItem("Numeric", id={"type": "convert", "index": column_name, "to": "Numeric"}),
+                dbc.DropdownMenuItem("String", id={"type": "convert", "index": column_name, "to": "String"}),
+                
+                dbc.DropdownMenuItem(divider=True),
+
+                dbc.DropdownMenuItem("Data Cleaning", header=True),
+                *[dbc.DropdownMenuItem(item["label"], id={"type": "clean", "index": column_name, "action": item["value"]}) for item in data_cleaning_options],
+            ],
+            className="m-1",
+            right=True
+        )
         return dbc.Card([
-            dbc.CardHeader(f"{column_name} (Data type: {data_type})"),  # Display column name with data type
+        dbc.CardHeader([
+            html.Div([
+                html.Div(column_name),
+                html.Div(f"Data type: {data_type}", style={'fontSize': '12px', 'color': 'grey'})
+            ]),
+            dropdown_menu
+        ], style={'display': 'flex', 'justifyContent': 'space-between'}),
             dbc.CardBody([
                 dcc.Graph(figure=fig, style={'height': '250px'}),
                 html.P(f"NaN values: {nan_count}"),
@@ -153,9 +173,34 @@ def generate_column_summary_box(df, column_name):
         value_counts = df[column_name].value_counts()
         most_frequent_string = value_counts.index[0] if not value_counts.empty else "N/A"
         least_frequent_string = value_counts.index[-1] if not value_counts.empty else "N/A"
-        
+        data_cleaning_options = [
+            {"label": "Replace NaN with N/A", "value": "na_string"},
+            {"label": f"Replace NaN with Most Frequent: {most_frequent_string}", "value": "most_frequent"},
+        ]
+
+        dropdown_menu = dbc.DropdownMenu(
+            label="Options",
+            children=[
+                dbc.DropdownMenuItem("Change data type", header=True),
+                dbc.DropdownMenuItem("Numeric", id={"type": "convert", "index": column_name, "to": "Numeric"}),
+                dbc.DropdownMenuItem("String", id={"type": "convert", "index": column_name, "to": "String"}),
+                
+                dbc.DropdownMenuItem(divider=True),
+
+                dbc.DropdownMenuItem("Data Cleaning", header=True),
+                *[dbc.DropdownMenuItem(item["label"], id={"type": "clean", "index": column_name, "action": item["value"]}) for item in data_cleaning_options],
+            ],
+            className="m-1",
+            right=True
+        )
         return dbc.Card([
-            dbc.CardHeader(f"{column_name} (Data type: {data_type})"),  # Display column name with data type
+            dbc.CardHeader([
+                html.Div([
+                    html.Div(column_name),
+                    html.Div(f"Data type: {data_type}", style={'fontSize': '12px', 'color': 'grey'})
+                ]),
+                dropdown_menu  # Adding dropdown menu here for consistency
+            ], style={'display': 'flex', 'justifyContent': 'space-between'}),
             dbc.CardBody([
                 dcc.Graph(figure=fig, style={'height': '250px'}),
                 html.P(f"NaN values: {nan_count}"),
@@ -163,6 +208,7 @@ def generate_column_summary_box(df, column_name):
                 html.P(f"Least Frequent: {least_frequent_string}")
             ])
         ])
+
 
 @app.callback(
     [Output('output-data-upload', 'children'), Output('summary-output', 'children')],
@@ -228,40 +274,47 @@ def save_to_file(n_clicks, rows, export_format):
     elif export_format == 'json':
         json_string = df_to_save.to_json(orient='records')
         return dict(content=json_string, filename="edited_data.json")
-
-@app.callback(
-    Output('intermediate-div', 'children'),
-    Input('width-slider', 'value'),
-    prevent_initial_call=True
-)
-def update_table_width(width_value):
-    return f'{width_value}%'
     
 @app.callback(
     Output('table', 'data'),
-    Input('apply-cleaning-btn', 'n_clicks'),
-    State('data-cleaning-dropdown', 'value'),
+    [Input({'type': 'convert', 'index': ALL, 'to': ALL}, 'n_clicks'),
+     Input({'type': 'clean', 'index': ALL, 'action': ALL}, 'n_clicks')],
     State('table', 'data'),
-    State('column-selector', 'value'),
-    State('missing-value-handler', 'value'),
     prevent_initial_call=True
 )
-def unified_cleaning(n_clicks, cleaning_option, table_data, selected_columns, handler):
+def handle_dropdown_actions(n_clicks_convert, n_clicks_clean, table_data):
+    # Get the triggering input (i.e., which dropdown item was clicked)
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        raise dash.exceptions.PreventUpdate
+
+    # Information about the clicked dropdown item
+    prop_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    prop_info = json.loads(prop_id)
+
     df = pd.DataFrame(table_data)
 
-    if cleaning_option == 'remove_duplicates':
-        df.drop_duplicates(inplace=True)
-        
-    elif cleaning_option == 'handle_missing' and selected_columns and handler:
-        for col in selected_columns:  # Iterate over each selected column
-            if handler == 'max':
-                replacement = df[col].max()
-            elif handler == 'min':
-                replacement = df[col].min()
-            elif handler == 'mean':
-                replacement = df[col].mean()
-            elif handler == 'zero':
-                replacement = 0
-            df[col].fillna(replacement, inplace=True)
+    column_name = prop_info['index']
+
+    if prop_info['type'] == "convert":
+        if prop_info['to'] == "Numeric":
+            df[column_name] = pd.to_numeric(df[column_name], errors='coerce')
+        else:
+            df[column_name] = df[column_name].astype(str)
+    
+    elif prop_info['type'] == "clean":
+        if prop_info['action'] == "min":
+            df[column_name].fillna(df[column_name].min(), inplace=True)
+        elif prop_info['action'] == "max":
+            df[column_name].fillna(df[column_name].max(), inplace=True)
+        elif prop_info['action'] == "mean":
+            df[column_name].fillna(df[column_name].mean(), inplace=True)
+        elif prop_info['action'] == "zero":
+            df[column_name].fillna(0, inplace=True)
+        elif prop_info['action'] == "na_string":
+            df[column_name].fillna('N/A', inplace=True)
+        elif prop_info['action'] == "most_frequent":
+            most_frequent = df[column_name].mode().iloc[0] if not df[column_name].empty else "N/A"
+            df[column_name].fillna(most_frequent, inplace=True)
 
     return df.to_dict('records')
