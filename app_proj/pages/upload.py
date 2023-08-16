@@ -128,15 +128,16 @@ def generate_column_summary_box(df, column_name):
 
     if pd.api.types.is_numeric_dtype(df[column_name]):
         # Generate histogram for numeric columns
+        data_type = "Numeric"
         fig = px.histogram(df, x=column_name, nbins=5)  # Here, 5 bins are used for simplicity; you can adjust as needed.
         min_val = df[column_name].min()
         max_val = df[column_name].max()
         mean_val = df[column_name].mean()
 
         return dbc.Card([
-            dbc.CardHeader(column_name),
+            dbc.CardHeader(f"{column_name} (Data type: {data_type})"),  # Display column name with data type
             dbc.CardBody([
-                dcc.Graph(figure=fig, style={'height': '250px'}),  # Adjusted height
+                dcc.Graph(figure=fig, style={'height': '250px'}),
                 html.P(f"NaN values: {nan_count}"),
                 html.P(f"Min: {min_val}"),
                 html.P(f"Max: {max_val}"),
@@ -146,6 +147,7 @@ def generate_column_summary_box(df, column_name):
 
     else:
         # For non-numeric columns, show a bar chart of top X most frequent values
+        data_type = "String"
         top_values = df[column_name].value_counts().head(10)
         fig = px.bar(top_values, x=top_values.index, y=top_values.values, labels={'x': column_name, 'y': 'Count'})
         value_counts = df[column_name].value_counts()
@@ -153,9 +155,9 @@ def generate_column_summary_box(df, column_name):
         least_frequent_string = value_counts.index[-1] if not value_counts.empty else "N/A"
         
         return dbc.Card([
-            dbc.CardHeader(column_name),
+            dbc.CardHeader(f"{column_name} (Data type: {data_type})"),  # Display column name with data type
             dbc.CardBody([
-                dcc.Graph(figure=fig, style={'height': '250px'}),  # Adjusted height
+                dcc.Graph(figure=fig, style={'height': '250px'}),
                 html.P(f"NaN values: {nan_count}"),
                 html.P(f"Most Frequent: {most_frequent_string}"),
                 html.P(f"Least Frequent: {least_frequent_string}")
