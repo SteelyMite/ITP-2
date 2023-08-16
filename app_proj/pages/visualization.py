@@ -12,6 +12,13 @@ import dash_bootstrap_components as dbc
 selected_graphs_list = []
 
 
+df = pd.DataFrame({
+    'X': [1, 2, 3, 4, 5],
+    'Y': [5, 4, 3, 2, 1]
+})
+
+
+
 layout = html.Div([
     dcc.Store(id='storage'),
     dcc.Store(id='graphs-storage', data={'graphs': []}),
@@ -146,8 +153,29 @@ layout = html.Div([
         ],
         style={'width': '50%'}
     ),
+
     html.Button('Add', id='add-button', className='mt-3 mb-4'),  # spacing
-    html.Div(id='graphs-container')
+    html.Div(id='graphs-container'),
+
+     dcc.Dropdown(
+        id='graph-selector',
+        options=[
+            {'label': 'Scatter Plot', 'value': 'scatter'},
+            {'label': 'Line Plot', 'value': 'line'},
+            {'label': 'Bar Chart', 'value': 'bar'},
+            {'label': 'Pie Chart', 'value': 'pie'},
+            {'label': 'Histogram', 'value': 'histogram'},
+            {'label': 'Box Plot', 'value': 'box'},
+            {'label': '3D Scatter Plot', 'value': '3dscatter'},
+            {'label': 'Area Plot', 'value': 'area'},
+            {'label': 'Violin Plot', 'value': 'violin'}        ],
+        value='scatter'  # default value
+    ),
+    html.Button('Add to List', id='add-to-list-button'),
+    html.Div(id='graph-type-table')
+
+
+
 ])
 
 
@@ -267,19 +295,39 @@ def update_visualization(selected_column, visualization_type, data):
     prevent_initial_call=True
 )
 def update_selected_graph_table(n_clicks, selected_graph):
-    # This could be a global list or a Dash Store component for better practice
-    global selected_graphs_list  # Or use a different approach to store
+    global selected_graphs_list
 
-    # Add the selected graph to the list
     selected_graphs_list.append(selected_graph)
 
-    # Convert the list to a DataFrame for display
     df = pd.DataFrame(selected_graphs_list, columns=['Selected Graph Type'])
 
-    # Create a table from the DataFrame
     table = dash_table.DataTable(
         columns=[{'name': i, 'id': i} for i in df.columns],
         data=df.to_dict('records')
     )
 
     return table
+
+
+@app.callback(
+    Output('graph-container', 'children'),
+    Input('add-graph-button', 'n_clicks'),
+    State('graph-selector', 'value'),
+    State('graph-container', 'children'),
+    prevent_initial_call=True
+)
+def display_selected_graph(n_clicks, selected_graph, existing_graphs):
+    if not existing_graphs:
+        existing_graphs = []
+    
+    # Create the actual graph based on the type selected
+    if selected_graph == 'scatter':
+        fig = px.scatter(df, x='X', y='Y')
+    elif selected_graph == 'line':
+        fig = px.line(df, x='X', y='Y')
+    # ... add more graph types as necessary
+
+    new_graph = dcc.Graph(figure=fig)
+    existing_graphs.append(new_graph)
+
+    return existing_graphs
