@@ -1,6 +1,6 @@
 import json
 import dash
-from dash import dcc, html
+from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
@@ -15,25 +15,87 @@ layout =html.Div([
 
     # upload
     html.Div(id='upload-menu', style={'display': 'none'}),
-    dcc.Upload(
-        id='upload-data',
-        children=html.Div([
-            'Drag and Drop or ',
-            html.A('Select Files')
+         dbc.Row([
+            dbc.Col([
+                dcc.Dropdown(
+                    id='file-type-dropdown',
+                    options=[
+                        {'label': 'CSV', 'value': 'csv'},
+                        {'label': 'Excel', 'value': 'excel'},
+                        {'label': 'JSON', 'value': 'json'}
+                    ],
+                    placeholder="Select file type...",
+                    value='csv',
+                    style={
+                        'alignItems': 'center',
+                        'justifyContent': 'center',
+                        'width': '100%',
+                        'height': '60px',
+                        'borderWidth': '1px',
+                        'borderRadius': '5px',
+                        'margin': '10px'
+                    }
+                ),
+                html.Div(id='upload-container'), 
+                dash_table.DataTable(id='datatable-upload-container')
+            ], width=2),
+            dbc.Col([
+                dcc.Upload(
+                    id='upload-data',
+                    children=html.Div([
+                        'Drag and Drop or ',
+                        html.A('Select Files')
+                    ]),
+                    style={
+                        'width': '100%',
+                        'height': '60px',
+                        'lineHeight': '60px',
+                        'borderWidth': '1px',
+                        'borderStyle': 'dashed',
+                        'borderRadius': '5px',
+                        'textAlign': 'center',
+                        'margin': '10px'
+                    },
+                    multiple=False
+                ),
+            ], width=4),
+            dbc.Col([
+                dcc.Dropdown(
+                    id='export-format-dropdown',
+                    options=[
+                        {'label': 'CSV', 'value': 'csv'},
+                        {'label': 'Excel', 'value': 'xlsx'},
+                        {'label': 'JSON', 'value': 'json'}
+                    ],
+                    value='csv',
+                    clearable=False,
+                    style={
+                        'alignItems': 'center',
+                        'justifyContent': 'center',
+                        'width': '100%',
+                        'height': '60px',
+                        'borderWidth': '1px',
+                        'borderRadius': '5px',
+                        'margin': '10px'
+                    }
+                ),
+            ], width=2),
+            dbc.Col([
+                html.Button('Save', id='save-button', style={
+                    'width': '100%',
+                    'height': '60px',
+                    'lineHeight': '60px',
+                    'borderRadius': '5px',
+                    'textAlign': 'center',
+                    'margin': '10px',
+                    'background': '#007bff',
+                    'color': 'white',
+                    'border': 'none',
+                    'cursor': 'pointer',
+                }),
+                dcc.Download(id="download")
+            ], width=4)    
         ]),
-        style={
-            'width': '100%',
-            'height': '60px',
-            'lineHeight': '60px',
-            'borderWidth': '1px',
-            'borderStyle': 'dashed',
-            'borderRadius': '5px',
-            'textAlign': 'center',
-            'margin': '10px'
-        },
-        multiple=False
-    ),
-
     # selection
     dbc.Row([
         dbc.Col([
