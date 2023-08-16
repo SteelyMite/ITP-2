@@ -106,6 +106,14 @@ layout = html.Div([
             dbc.Tab(label='Statistical Summary', children=[
                 html.Div(id='summary-output'),
             ]),
+            # Tab 3: Visualisation Summary
+            dbc.Tab(label='Visualisation', children=[
+                
+            ]),
+            # Tab 4: Analytics Summary
+            dbc.Tab(label='Analytics', children=[
+                
+            ]),
         ]),
     ])
 ])
