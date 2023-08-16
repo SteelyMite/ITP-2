@@ -11,90 +11,102 @@ from app import app
 
 layout = html.Div([
     dbc.Container([
-        dbc.Row([
-            dbc.Col([
-                dcc.Dropdown(
-                    id='file-type-dropdown',
-                    options=[
-                        {'label': 'CSV', 'value': 'csv'},
-                        {'label': 'Excel', 'value': 'excel'},
-                        {'label': 'JSON', 'value': 'json'}
-                    ],
-                    placeholder="Select file type...",
-                    value='csv',
-                    style={
-                        'alignItems': 'center',
-                        'justifyContent': 'center',
-                        'width': '100%',
-                        'height': '60px',
-                        'borderWidth': '1px',
-                        'borderRadius': '5px',
-                        'margin': '10px'
-                    }
-                ),
-                html.Div(id='upload-container'),  # This will house the Upload component
-                dash_table.DataTable(id='datatable-upload-container')
-            ], width=2),
-            dbc.Col([
-                dcc.Upload(
-                    id='upload-data',
-                    children=html.Div([
-                        'Drag and Drop or ',
-                        html.A('Select Files')
-                    ]),
-                    style={
-                        'width': '100%',
-                        'height': '60px',
-                        'lineHeight': '60px',
-                        'borderWidth': '1px',
-                        'borderStyle': 'dashed',
-                        'borderRadius': '5px',
-                        'textAlign': 'center',
-                        'margin': '10px'
-                    },
-                    multiple=False
-                ),
-            ], width=4),
-            dbc.Col([
-                dcc.Dropdown(
-                    id='export-format-dropdown',
-                    options=[
-                        {'label': 'CSV', 'value': 'csv'},
-                        {'label': 'Excel', 'value': 'xlsx'},
-                        {'label': 'JSON', 'value': 'json'}
-                    ],
-                    value='csv',
-                    clearable=False,
-                    style={
-                        'alignItems': 'center',
-                        'justifyContent': 'center',
-                        'width': '100%',
-                        'height': '60px',
-                        'borderWidth': '1px',
-                        'borderRadius': '5px',
-                        'margin': '10px'
-                    }
-                ),
-            ], width=2),
-            dbc.Col([
-                html.Button('Save', id='save-button', style={
-                    'width': '100%',
-                    'height': '60px',
-                    'lineHeight': '60px',
-                    'borderRadius': '5px',
-                    'textAlign': 'center',
-                    'margin': '10px',
-                    'background': '#007bff',
-                    'color': 'white',
-                    'border': 'none',
-                    'cursor': 'pointer',
-                }),
-                dcc.Download(id="download")
-            ], width=4)    
+        dbc.Tabs([
+            # Tab 1: Import, Export, DataFrame Display
+            dbc.Tab(label='Data Management', children=[
+                dbc.Row([
+                    # Import File Type Dropdown
+                    dbc.Col([
+                        dcc.Dropdown(
+                            id='file-type-dropdown',
+                            options=[
+                                {'label': 'CSV', 'value': 'csv'},
+                                {'label': 'Excel', 'value': 'excel'},
+                                {'label': 'JSON', 'value': 'json'}
+                            ],
+                            placeholder="Select file type...",
+                            value='csv',
+                            style={
+                                'alignItems': 'center',
+                                'justifyContent': 'center',
+                                'width': '100%',
+                                'height': '40px',
+                                'borderWidth': '1px',
+                                'borderRadius': '5px',
+                                'margin': '10px'
+                            }
+                        ),
+                    ], width=3),
+                    # Upload Data Section
+                    dbc.Col([
+                        dcc.Upload(
+                            id='upload-data',
+                            children=html.Div([
+                                'Drag and Drop or ',
+                                html.A('Select Files')
+                            ]),
+                            style={
+                                'width': '100%',
+                                'height': '40px',
+                                'lineHeight': '40px',
+                                'borderWidth': '1px',
+                                'borderStyle': 'dashed',
+                                'borderRadius': '5px',
+                                'textAlign': 'center',
+                                'margin': '10px'
+                            },
+                            multiple=False
+                        ),
+                    ], width=3),
+                    # Export File Type Dropdown
+                    dbc.Col([
+                        dcc.Dropdown(
+                            id='export-format-dropdown',
+                            options=[
+                                {'label': 'CSV', 'value': 'csv'},
+                                {'label': 'Excel', 'value': 'xlsx'},
+                                {'label': 'JSON', 'value': 'json'}
+                            ],
+                            value='csv',
+                            clearable=False,
+                            style={
+                                'alignItems': 'center',
+                                'justifyContent': 'center',
+                                'width': '100%',
+                                'height': '40px',
+                                'borderWidth': '1px',
+                                'borderRadius': '5px',
+                                'margin': '10px'
+                            }
+                        ),
+                    ], width=3),
+                    # Save Button and Download Component
+                    dbc.Col([
+                        html.Button('Save', id='save-button', style={
+                            'width': '100%',
+                            'height': '40px',
+                            'lineHeight': '40px',
+                            'borderRadius': '5px',
+                            'textAlign': 'center',
+                            'margin': '10px',
+                            'background': '#007bff',
+                            'color': 'white',
+                            'border': 'none',
+                            'cursor': 'pointer',
+                        }),
+                        dcc.Download(id="download")
+                    ], width=3)
+                ]),
+                # DataTable to Display Uploaded Data
+                dash_table.DataTable(id='datatable-upload-container'),
+                html.Div(id='output-data-upload'),
+            ]),
+
+            # Tab 2: Statistical Summary
+            dbc.Tab(label='Statistical Summary', children=[
+                html.Div(id='summary-output'),
+            ]),
         ]),
-        html.Div(id='output-data-upload'),
-        html.Div(id='summary-output'),
-        html.Div(id='intermediate-div', style={'display': 'none'})
     ])
 ])
 
@@ -168,6 +180,7 @@ def generate_column_summary_box(df, column_name):
     else:
         # For non-numeric columns, show a bar chart of top X most frequent values
         data_type = "String"
+        unique_count = df[column_name].nunique()  # Calculate the number of unique strings
         top_values = df[column_name].value_counts().head(10)
         fig = px.bar(top_values, x=top_values.index, y=top_values.values, labels={'x': column_name, 'y': 'Count'})
         value_counts = df[column_name].value_counts()
@@ -205,10 +218,10 @@ def generate_column_summary_box(df, column_name):
                 dcc.Graph(figure=fig, style={'height': '250px'}),
                 html.P(f"NaN values: {nan_count}"),
                 html.P(f"Most Frequent: {most_frequent_string}"),
-                html.P(f"Least Frequent: {least_frequent_string}")
+                html.P(f"Least Frequent: {least_frequent_string}"),
+                html.P(f"Unique Strings: {unique_count}")  # Display the number of unique strings
             ])
         ])
-
 
 @app.callback(
     [Output('output-data-upload', 'children'), Output('summary-output', 'children')],
@@ -247,7 +260,8 @@ def update_output(contents, file_type):
 
             return data_table, rows
         
-    return None, None
+    # Returning an empty div to ensure no data is displayed if conditions aren't met.
+    return html.Div(), html.Div()
         
 @app.callback(
     Output('download', 'data'),
