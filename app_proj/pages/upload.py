@@ -127,8 +127,8 @@ def generate_column_summary_box(df, column_name):
     nan_count = df[column_name].isna().sum()
 
     if pd.api.types.is_numeric_dtype(df[column_name]):
-        # Generate bar graph for numeric columns
-        fig = px.bar(df, x=column_name)
+        # Generate histogram for numeric columns
+        fig = px.histogram(df, x=column_name, nbins=5)  # Here, 5 bins are used for simplicity; you can adjust as needed.
         min_val = df[column_name].min()
         max_val = df[column_name].max()
         mean_val = df[column_name].mean()
@@ -136,7 +136,7 @@ def generate_column_summary_box(df, column_name):
         return dbc.Card([
             dbc.CardHeader(column_name),
             dbc.CardBody([
-                dcc.Graph(figure=fig, style={'height': '150px'}),
+                dcc.Graph(figure=fig, style={'height': '250px'}),  # Adjusted height
                 html.P(f"NaN values: {nan_count}"),
                 html.P(f"Min: {min_val}"),
                 html.P(f"Max: {max_val}"),
@@ -145,8 +145,9 @@ def generate_column_summary_box(df, column_name):
         ])
 
     else:
-        # For non-numeric columns, display NaN values, most frequent string, and least frequent string
-        fig = px.pie(df, names=column_name)
+        # For non-numeric columns, show a bar chart of top X most frequent values
+        top_values = df[column_name].value_counts().head(10)
+        fig = px.bar(top_values, x=top_values.index, y=top_values.values, labels={'x': column_name, 'y': 'Count'})
         value_counts = df[column_name].value_counts()
         most_frequent_string = value_counts.index[0] if not value_counts.empty else "N/A"
         least_frequent_string = value_counts.index[-1] if not value_counts.empty else "N/A"
@@ -154,7 +155,7 @@ def generate_column_summary_box(df, column_name):
         return dbc.Card([
             dbc.CardHeader(column_name),
             dbc.CardBody([
-                dcc.Graph(figure=fig, style={'height': '150px'}),
+                dcc.Graph(figure=fig, style={'height': '250px'}),  # Adjusted height
                 html.P(f"NaN values: {nan_count}"),
                 html.P(f"Most Frequent: {most_frequent_string}"),
                 html.P(f"Least Frequent: {least_frequent_string}")
