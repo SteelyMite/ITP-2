@@ -157,22 +157,22 @@ layout = html.Div([
     html.Button('Add', id='add-button', className='mt-3 mb-4'),  # spacing
     html.Div(id='graphs-container'),
 
-     dcc.Dropdown(
-        id='graph-selector',
-        options=[
-            {'label': 'Scatter Plot', 'value': 'scatter'},
-            {'label': 'Line Plot', 'value': 'line'},
-            {'label': 'Bar Chart', 'value': 'bar'},
-            {'label': 'Pie Chart', 'value': 'pie'},
-            {'label': 'Histogram', 'value': 'histogram'},
-            {'label': 'Box Plot', 'value': 'box'},
-            {'label': '3D Scatter Plot', 'value': '3dscatter'},
-            {'label': 'Area Plot', 'value': 'area'},
-            {'label': 'Violin Plot', 'value': 'violin'}        ],
-        value='scatter'  # default value
-    ),
-    html.Button('Add to List', id='add-to-list-button'),
-    html.Div(id='graph-type-table')
+    #  dcc.Dropdown(
+    #     id='graph-selector',
+    #     options=[
+    #         {'label': 'Scatter Plot', 'value': 'scatter'},
+    #         {'label': 'Line Plot', 'value': 'line'},
+    #         {'label': 'Bar Chart', 'value': 'bar'},
+    #         {'label': 'Pie Chart', 'value': 'pie'},
+    #         {'label': 'Histogram', 'value': 'histogram'},
+    #         {'label': 'Box Plot', 'value': 'box'},
+    #         {'label': '3D Scatter Plot', 'value': '3dscatter'},
+    #         {'label': 'Area Plot', 'value': 'area'},
+    #         {'label': 'Violin Plot', 'value': 'violin'}        ],
+    #     value='scatter'  # default value
+    # ),
+    # html.Button('Add to List', id='add-to-list-button'),
+    # html.Div(id='graph-type-table')
 
 
 
@@ -185,42 +185,53 @@ layout = html.Div([
 #############################
 #############################
 
+
 @app.callback(
     Output('graphs-container', 'children'),
-    Input('add-button', 'n_clicks'),
-    State('graph-selector', 'value'),
-    State('storage', 'data'),
-    State('graphs-storage', 'data'),
-    prevent_initial_call=True
+    [Input('add-button', 'n_clicks')],
+    [State('graph-selector', 'value'),
+     State('storage', 'data'),
+     State('graphs-storage', 'data')]
 )
-def add_graph(n_clicks, graph_type, data, existing_graphs):
-    if data is None or graph_type is None:
-        return dash.no_update
+def add_graph(n_clicks, graph_type, data, stored_graphs):
+    
+    # If the callback wasn't triggered by any input or missing required data
+    if not n_clicks or not graph_type or not data:
+        raise dash.exceptions.PreventUpdate
 
     df = pd.read_json(data, orient='split')
 
-    if graph_type == 'scatter':
-        fig = px.scatter(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE", hover_name="STATE")
-    elif graph_type == 'line':
-        fig = px.line(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE")
-    elif graph_type == 'bar':
-        fig = px.bar(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE")
-    elif graph_type == 'pie':
-        fig = px.pie(df, names="STATE", values="Cesarean Delivery Rate")
-    elif graph_type == 'histogram':
-        fig = px.histogram(df, x="Cesarean Delivery Rate", color="STATE") 
-    elif graph_type == 'box':
-        fig = px.box(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE") 
-    elif graph_type == '3dscatter':
-        fig = px.scatter_3d(df, x="YEAR", y="Cesarean Delivery Rate", z="Drug Overdose Mortality per 100,000", color="STATE") 
-    elif graph_type == 'area':
-        fig = px.area(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE")
-    elif graph_type == 'violin':
-        fig = px.violin(df, y="Cesarean Delivery Rate", color="STATE")
+    # Append the new graph type to the stored list
+    if graph_type not in stored_graphs['graphs']:
+        stored_graphs['graphs'].append(graph_type)
 
-    existing_graphs['graphs'].append(html.Div(dcc.Graph(figure=fig)))
+    # For each graph type in the stored list, generate the graph and append to graph_divs
+    graph_divs = []
+    for gtype in stored_graphs['graphs']:
+        if gtype == 'scatter':
+            fig = px.scatter(df, x="YEAR", y='Cesarean Delivery Rate')
+        elif graph_type == 'line':
+             fig = px.line(df, x="YEAR", y='Cesarean Delivery Rate', color="STATE")
+        elif graph_type == 'bar':
+            fig = px.bar(df, x="YEAR", y='Cesarean Delivery Rate', color="STATE")
+        elif graph_type == 'pie':
+            fig = px.pie(df, names="STATE", values="Cesarean Delivery Rate")
+        elif graph_type == 'histogram':
+            fig = px.histogram(df, x="Cesarean Delivery Rate", color="STATE") 
+        elif graph_type == 'box':
+            fig = px.box(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE") 
+        elif graph_type == '3dscatter':
+            fig = px.scatter_3d(df, x="YEAR", y="Cesarean Delivery Rate", z="Drug Overdose Mortality per 100,000", color="STATE") 
+        elif graph_type == 'area':
+            fig = px.area(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE")
+        elif graph_type == 'violin':
+            fig = px.violin(df, y="Cesarean Delivery Rate", color="STATE")
 
-    return existing_graphs['graphs']
+    graph_divs.append(html.Div(dcc.Graph(figure=fig)))
+
+    # Return the updated list of graph Divs
+    return graph_divs
+
 
 
 def parse_contents(contents):
@@ -309,25 +320,25 @@ def update_selected_graph_table(n_clicks, selected_graph):
     return table
 
 
-@app.callback(
-    Output('graph-container', 'children'),
-    Input('add-graph-button', 'n_clicks'),
-    State('graph-selector', 'value'),
-    State('graph-container', 'children'),
-    prevent_initial_call=True
-)
-def display_selected_graph(n_clicks, selected_graph, existing_graphs):
-    if not existing_graphs:
-        existing_graphs = []
+# @app.callback(
+#     Output('graph-container', 'children'),
+#     Input('add-graph-button', 'n_clicks'),
+#     State('graph-selector', 'value'),
+#     State('graph-container', 'children'),
+#     prevent_initial_call=True
+# )
+# def display_selected_graph(n_clicks, selected_graph, existing_graphs):
+#     if not existing_graphs:
+#         existing_graphs = []
     
-    # Create the actual graph based on the type selected
-    if selected_graph == 'scatter':
-        fig = px.scatter(df, x='X', y='Y')
-    elif selected_graph == 'line':
-        fig = px.line(df, x='X', y='Y')
-    # ... add more graph types as necessary
+#     # Create the actual graph based on the type selected
+#     if selected_graph == 'scatter':
+#         fig = px.scatter(df, x='X', y='Y')
+#     elif selected_graph == 'line':
+#         fig = px.line(df, x='X', y='Y')
+#     # ... add more graph types as necessary
 
-    new_graph = dcc.Graph(figure=fig)
-    existing_graphs.append(new_graph)
+#     new_graph = dcc.Graph(figure=fig)
+#     existing_graphs.append(new_graph)
 
-    return existing_graphs
+#     return existing_graphs
