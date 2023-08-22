@@ -109,21 +109,37 @@ layout = html.Div([
     # selection
     dbc.Row([
         dbc.Col([
-            html.Label('Select column for visualization:'),
-            dcc.Dropdown(
-                id='visualization-column-dropdown',
-                options=[],
-                placeholder="Select a column...",
-                value=None
-            ),
-        ], width=6),
+    html.Label('Select X-axis column:'),
+    dcc.Dropdown(
+        id='xaxis-column-dropdown',
+        options=[],
+        placeholder="Select a column for X-axis...",
+        value=None
+    ),
+], width=4),
+dbc.Col([
+    html.Label('Select Y-axis column:'),
+    dcc.Dropdown(
+        id='yaxis-column-dropdown',
+        options=[],
+        placeholder="Select a column for Y-axis...",
+        value=None
+    ),
+], width=4),
         dbc.Col([
             html.Label('Select visualization type:'),
             dcc.Dropdown(
                 id='visualization-type-dropdown',
                 options=[
-                    {'label': 'Bar Chart', 'value': 'bar'},
-                    {'label': 'Pie Chart', 'value': 'pie'},
+                      {'label': 'Scatter Plot', 'value': 'scatter'},
+            {'label': 'Line Plot', 'value': 'line'},
+            {'label': 'Bar Chart', 'value': 'bar'},
+            {'label': 'Pie Chart', 'value': 'pie'},
+            {'label': 'Histogram', 'value': 'histogram'},
+            {'label': 'Box Plot', 'value': 'box'},
+            {'label': '3D Scatter Plot', 'value': '3dscatter'},
+            {'label': 'Area Plot', 'value': 'area'},
+            {'label': 'Violin Plot', 'value': 'violin'}
                 ],
                 placeholder="Select a type...",
                 value=None
@@ -136,103 +152,17 @@ layout = html.Div([
             dcc.Graph(id='visualization-graph')  # display the selected visualization
         ])
     ], className='mb-4'),
-    # graphs
-    html.Label('Choose type of graph to add:', className='mb-2'),
-    dcc.Dropdown(
-        id='graph-selector',
-        options=[
-            {'label': 'Scatter Plot', 'value': 'scatter'},
-            {'label': 'Line Plot', 'value': 'line'},
-            {'label': 'Bar Chart', 'value': 'bar'},
-            {'label': 'Pie Chart', 'value': 'pie'},
-            {'label': 'Histogram', 'value': 'histogram'},
-            {'label': 'Box Plot', 'value': 'box'},
-            {'label': '3D Scatter Plot', 'value': '3dscatter'},
-            {'label': 'Area Plot', 'value': 'area'},
-            {'label': 'Violin Plot', 'value': 'violin'}
-        ],
-        style={'width': '50%'}
-    ),
-
-    html.Button('Add', id='add-button', className='mt-3 mb-4'),  # spacing
-    html.Div(id='graphs-container'),
-
-    #  dcc.Dropdown(
-    #     id='graph-selector',
-    #     options=[
-    #         {'label': 'Scatter Plot', 'value': 'scatter'},
-    #         {'label': 'Line Plot', 'value': 'line'},
-    #         {'label': 'Bar Chart', 'value': 'bar'},
-    #         {'label': 'Pie Chart', 'value': 'pie'},
-    #         {'label': 'Histogram', 'value': 'histogram'},
-    #         {'label': 'Box Plot', 'value': 'box'},
-    #         {'label': '3D Scatter Plot', 'value': '3dscatter'},
-    #         {'label': 'Area Plot', 'value': 'area'},
-    #         {'label': 'Violin Plot', 'value': 'violin'}        ],
-    #     value='scatter'  # default value
-    # ),
-    # html.Button('Add to List', id='add-to-list-button'),
-    # html.Div(id='graph-type-table')
 
 
 
-])
-
-
-#############################
-#############################
-#############################
-#############################
-#############################
-
-
-@app.callback(
-    Output('graphs-container', 'children'),
-    [Input('add-button', 'n_clicks')],
-    [State('graph-selector', 'value'),
-     State('storage', 'data'),
-     State('graphs-storage', 'data')]
-)
-def add_graph(n_clicks, graph_type, data, stored_graphs):
+dbc.Row([
+    dbc.Col([
+    ])
+], className='mb-4'),
+html.Button('Save Graph', id='save-graph-button', className='mt-3 mb-4'), 
+html.Div(id='saved-graphs-container')
     
-    # If the callback wasn't triggered by any input or missing required data
-    if not n_clicks or not graph_type or not data:
-        raise dash.exceptions.PreventUpdate
-
-    df = pd.read_json(data, orient='split')
-
-    # Append the new graph type to the stored list
-    if graph_type not in stored_graphs['graphs']:
-        stored_graphs['graphs'].append(graph_type)
-
-    # For each graph type in the stored list, generate the graph and append to graph_divs
-    graph_divs = []
-    for gtype in stored_graphs['graphs']:
-        if gtype == 'scatter':
-            fig = px.scatter(df, x="YEAR", y='Cesarean Delivery Rate')
-        elif graph_type == 'line':
-             fig = px.line(df, x="YEAR", y='Cesarean Delivery Rate', color="STATE")
-        elif graph_type == 'bar':
-            fig = px.bar(df, x="YEAR", y='Cesarean Delivery Rate', color="STATE")
-        elif graph_type == 'pie':
-            fig = px.pie(df, names="STATE", values="Cesarean Delivery Rate")
-        elif graph_type == 'histogram':
-            fig = px.histogram(df, x="Cesarean Delivery Rate", color="STATE") 
-        elif graph_type == 'box':
-            fig = px.box(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE") 
-        elif graph_type == '3dscatter':
-            fig = px.scatter_3d(df, x="YEAR", y="Cesarean Delivery Rate", z="Drug Overdose Mortality per 100,000", color="STATE") 
-        elif graph_type == 'area':
-            fig = px.area(df, x="YEAR", y="Cesarean Delivery Rate", color="STATE")
-        elif graph_type == 'violin':
-            fig = px.violin(df, y="Cesarean Delivery Rate", color="STATE")
-
-    graph_divs.append(html.Div(dcc.Graph(figure=fig)))
-
-    # Return the updated list of graph Divs
-    return graph_divs
-
-
+])
 
 def parse_contents(contents):
     content_type, content_string = contents.split(',')
@@ -262,7 +192,8 @@ def display_upload_menu(n_clicks):
         return {'display': 'block'}, {'display': 'block'}, {'display': 'block'}
 
 @app.callback(
-    Output('visualization-column-dropdown', 'options'),
+    [Output('xaxis-column-dropdown', 'options'),
+     Output('yaxis-column-dropdown', 'options')],
     Input('storage', 'data'),
     prevent_initial_call=True
 )
@@ -270,35 +201,46 @@ def set_column_options(data):
     if data:
         df = pd.read_json(data, orient='split')
         options = [{'label': col, 'value': col} for col in df.columns]
-        return options
-    return []
+        return options, options
+    return [], []
 
 @app.callback(
     Output('visualization-graph', 'figure'),
-    Input('visualization-column-dropdown', 'value'),
-    Input('visualization-type-dropdown', 'value'),
+    [Input('xaxis-column-dropdown', 'value'),
+     Input('yaxis-column-dropdown', 'value'),
+     Input('visualization-type-dropdown', 'value')],
     State('storage', 'data'),
     prevent_initial_call=True
 )
-def update_visualization(selected_column, visualization_type, data):
-    if data is None or selected_column is None or visualization_type is None:
+def update_visualization(x_column, y_column, visualization_type, data):
+    if data is None or x_column is None or y_column is None or visualization_type is None:
         return dash.no_update
 
     df = pd.read_json(data, orient='split')
 
-    if visualization_type == 'bar':
-        value_counts = df[selected_column].value_counts()
-        fig = px.bar(x=value_counts.index, y=value_counts.values, labels={'x': selected_column, 'y': 'count'})
-
+    if visualization_type == 'scatter':
+        fig = px.scatter(df, x=x_column, y=y_column)
+    elif visualization_type == 'line':
+        fig = px.line(df, x=x_column, y=y_column)
+    elif visualization_type == 'bar':
+        fig = px.bar(df, x=x_column, y=y_column)
     elif visualization_type == 'pie':
-        value_counts = df[selected_column].value_counts()
-        fig = px.pie(names=value_counts.index, values=value_counts.values)
+        fig = px.pie(df, names=x_column, values=y_column)
+    elif visualization_type == 'histogram':
+        fig = px.histogram(df, x=x_column)
+    elif visualization_type == 'box':
+        fig = px.box(df, x=x_column, y=y_column)
+    elif visualization_type == '3dscatter':
+        fig = px.scatter_3d(df, x=x_column, y=y_column)
+    elif visualization_type == 'area':
+        fig = px.area(df, x=x_column, y=y_column)
+    elif visualization_type == 'violin':
+        fig = px.violin(df, x=x_column, y=y_column)
 
     return fig
 
 
 
-#######
 @app.callback(
     Output('graph-type-table', 'children'),
     Input('add-to-list-button', 'n_clicks'),
@@ -320,25 +262,21 @@ def update_selected_graph_table(n_clicks, selected_graph):
     return table
 
 
-# @app.callback(
-#     Output('graph-container', 'children'),
-#     Input('add-graph-button', 'n_clicks'),
-#     State('graph-selector', 'value'),
-#     State('graph-container', 'children'),
-#     prevent_initial_call=True
-# )
-# def display_selected_graph(n_clicks, selected_graph, existing_graphs):
-#     if not existing_graphs:
-#         existing_graphs = []
-    
-#     # Create the actual graph based on the type selected
-#     if selected_graph == 'scatter':
-#         fig = px.scatter(df, x='X', y='Y')
-#     elif selected_graph == 'line':
-#         fig = px.line(df, x='X', y='Y')
-#     # ... add more graph types as necessary
 
-#     new_graph = dcc.Graph(figure=fig)
-#     existing_graphs.append(new_graph)
+@app.callback(
+    Output('saved-graphs-container', 'children'),
+    [Input('save-graph-button', 'n_clicks')],
+    [State('visualization-graph', 'figure'),
+     State('saved-graphs-container', 'children')]
+)
+def save_current_graph(n_clicks, current_figure, current_saved_graphs):
+    if not current_figure:
+        raise dash.exceptions.PreventUpdate
+    current_graph = dcc.Graph(figure=current_figure)
 
-#     return existing_graphs
+    if not current_saved_graphs:
+        current_saved_graphs = []
+
+    current_saved_graphs.append(current_graph)
+
+    return current_saved_graphs
