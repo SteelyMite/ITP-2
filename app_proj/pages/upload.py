@@ -108,7 +108,56 @@ layout = html.Div([
             ]),
             # Tab 3: Visualisation Summary
             dbc.Tab(label='Visualisation', children=[
-                
+                # column selection
+                dbc.Row([
+                    # x axis column
+                    dbc.Col([
+                        html.Label('Select X-axis column:'),
+                        dcc.Dropdown(
+                            id='xaxis-column-dropdown',
+                            options=[],
+                            placeholder="Select a column for X-axis...",
+                            value=None
+                        ),
+                    ], width=4),
+                    # y axis column
+                    dbc.Col([
+                        html.Label('Select Y-axis column:'),
+                        dcc.Dropdown(
+                            id='yaxis-column-dropdown',
+                            options=[],
+                            placeholder="Select a column for Y-axis...",
+                            value=None
+                        ),
+                    ], width=4),
+                    # graph type
+                    dbc.Col([
+                        html.Label('Select visualization type:'),
+                        dcc.Dropdown(
+                            id='visualization-type-dropdown',
+                            options=[
+                                {'label': 'Scatter Plot', 'value': 'scatter'},
+                        {'label': 'Line Plot', 'value': 'line'},
+                        {'label': 'Bar Chart', 'value': 'bar'},
+                        {'label': 'Pie Chart', 'value': 'pie'},
+                        {'label': 'Histogram', 'value': 'histogram'},
+                        {'label': 'Box Plot', 'value': 'box'},
+                        {'label': '3D Scatter Plot', 'value': '3dscatter'},
+                        {'label': 'Area Plot', 'value': 'area'},
+                        {'label': 'Violin Plot', 'value': 'violin'}
+                            ],
+                            placeholder="Select a type...",
+                            value=None
+                        ),
+                    ], width=6)
+                ], className='mb-4'),
+                # Visualization
+                dbc.Row([
+                    dbc.Col([
+                        dcc.Graph(id='visualization-graph')  # display the selected visualization
+                    ])
+                ], className='mb-4'),
+                # Save Graph Button
             ]),
             # Tab 4: Analytics Summary
             dbc.Tab(label='Analytics', children=[

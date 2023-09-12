@@ -109,23 +109,23 @@ layout = html.Div([
     # selection
     dbc.Row([
         dbc.Col([
-    html.Label('Select X-axis column:'),
-    dcc.Dropdown(
-        id='xaxis-column-dropdown',
-        options=[],
-        placeholder="Select a column for X-axis...",
-        value=None
-    ),
-], width=4),
-dbc.Col([
-    html.Label('Select Y-axis column:'),
-    dcc.Dropdown(
-        id='yaxis-column-dropdown',
-        options=[],
-        placeholder="Select a column for Y-axis...",
-        value=None
-    ),
-], width=4),
+            html.Label('Select X-axis column:'),
+            dcc.Dropdown(
+                id='xaxis-column-dropdown',
+                options=[],
+                placeholder="Select a column for X-axis...",
+                value=None
+            ),
+        ], width=4),
+        dbc.Col([
+            html.Label('Select Y-axis column:'),
+            dcc.Dropdown(
+                id='yaxis-column-dropdown',
+                options=[],
+                placeholder="Select a column for Y-axis...",
+                value=None
+            ),
+        ], width=4),
         dbc.Col([
             html.Label('Select visualization type:'),
             dcc.Dropdown(
@@ -155,14 +155,14 @@ dbc.Col([
 
 
 
-dbc.Row([
-    dbc.Col([
+    dbc.Row([
+        dbc.Col([
+        ])
+    ], className='mb-4'),
+    html.Button('Save Graph', id='save-graph-button', className='mt-3 mb-4'), 
+    html.Div(id='saved-graphs-container')
+        
     ])
-], className='mb-4'),
-html.Button('Save Graph', id='save-graph-button', className='mt-3 mb-4'), 
-html.Div(id='saved-graphs-container')
-    
-])
 
 def parse_contents(contents):
     content_type, content_string = contents.split(',')
