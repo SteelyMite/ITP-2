@@ -113,16 +113,13 @@ app = dash.Dash(__name__)
 
 # Example usage:
 if __name__ == "__main__":
-    # Load your DataFrame here (replace 'data.csv' with your data file)
     data = pd.read_csv('social_capital.csv')
 
     # Specify the target column for classification
     target_column = 'YEAR'
 
-    # Perform classification
     classification_accuracy = perform_classification(data, target_column)
 
-    # Perform clustering
     cluster_silhouette_score, scatter_plot = perform_clustering(data)
 
     # Define the layout of the Dash app
