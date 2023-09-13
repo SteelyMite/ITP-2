@@ -5,8 +5,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, silhouette_score
 import dash
 from dash import dcc
-# import dash_core_components as dcc
-# import dash_html_components as html
 from dash import html
 import plotly.graph_objs as go
 from sklearn.preprocessing import OneHotEncoder
@@ -14,7 +12,7 @@ from sklearn.compose import ColumnTransformer
 
 def perform_classification(data, target_column):
     """
-    Perform classification on a Pandas DataFrame.
+    Perform classification on DataFrame using Random Forest.
 
     Args:
     - data (pd.DataFrame): The input DataFrame containing the features and target variable for classification.
@@ -43,7 +41,8 @@ def perform_classification(data, target_column):
     # Split the data into training and testing sets for classification
     X_train, X_test, y_train, y_test = train_test_split(X_encoded, y, test_size=0.2, random_state=42)
 
-    # Perform Classification using Random Forest
+    # Perform Classification using Random Forest 
+    # set random_state=42 for reproducibility
     classifier = RandomForestClassifier(random_state=42)
     classifier.fit(X_train, y_train)
     y_pred = classifier.predict(X_test)
@@ -58,7 +57,7 @@ from sklearn.preprocessing import StandardScaler
 
 def perform_clustering(data, num_clusters=3):
     """
-    Perform clustering on a Pandas DataFrame.
+    Perform clustering on DataFrame.
 
     Args:
     - data (pd.DataFrame): The input DataFrame containing the features for clustering.
