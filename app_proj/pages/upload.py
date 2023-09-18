@@ -10,6 +10,7 @@ import pandas as pd
 from app import app
 
 layout = html.Div([
+    dcc.Store(id='stored-data'), # store the uploaded data
     dbc.Container([
         dbc.Tabs([
             # Tab 1: Import, Export, DataFrame Display
@@ -117,8 +118,17 @@ layout = html.Div([
                             id='xaxis-column-dropdown',
                             options=[],
                             placeholder="Select a column for X-axis...",
-                            value=None
-                        ),
+                            value=None,
+                            style={
+                                'alignItems': 'center',
+                                'justifyContent': 'center',
+                                'width': '100%',
+                                'height': '40px',
+                                'borderWidth': '1px',
+                                'borderRadius': '5px',
+                                'margin': '10px'
+                            },
+                        )
                     ], width=4),
                     # y axis column
                     dbc.Col([
@@ -127,7 +137,16 @@ layout = html.Div([
                             id='yaxis-column-dropdown',
                             options=[],
                             placeholder="Select a column for Y-axis...",
-                            value=None
+                            value=None,
+                            style={
+                                'alignItems': 'center',
+                                'justifyContent': 'center',
+                                'width': '100%',
+                                'height': '40px',
+                                'borderWidth': '1px',
+                                'borderRadius': '5px',
+                                'margin': '10px'
+                            }
                         ),
                     ], width=4),
                     # graph type
@@ -137,19 +156,28 @@ layout = html.Div([
                             id='visualization-type-dropdown',
                             options=[
                                 {'label': 'Scatter Plot', 'value': 'scatter'},
-                        {'label': 'Line Plot', 'value': 'line'},
-                        {'label': 'Bar Chart', 'value': 'bar'},
-                        {'label': 'Pie Chart', 'value': 'pie'},
-                        {'label': 'Histogram', 'value': 'histogram'},
-                        {'label': 'Box Plot', 'value': 'box'},
-                        {'label': '3D Scatter Plot', 'value': '3dscatter'},
-                        {'label': 'Area Plot', 'value': 'area'},
-                        {'label': 'Violin Plot', 'value': 'violin'}
+                                {'label': 'Line Plot', 'value': 'line'},
+                                {'label': 'Bar Chart', 'value': 'bar'},
+                                {'label': 'Pie Chart', 'value': 'pie'},
+                                {'label': 'Histogram', 'value': 'histogram'},
+                                {'label': 'Box Plot', 'value': 'box'},
+                                {'label': '3D Scatter Plot', 'value': '3dscatter'},
+                                {'label': 'Area Plot', 'value': 'area'},
+                                {'label': 'Violin Plot', 'value': 'violin'}
                             ],
                             placeholder="Select a type...",
-                            value=None
+                            value=None,
+                            style={
+                                'alignItems': 'center',
+                                'justifyContent': 'center',
+                                'width': '100%',
+                                'height': '40px',
+                                'borderWidth': '1px',
+                                'borderRadius': '5px',
+                                'margin': '10px'
+                            }
                         ),
-                    ], width=6)
+                    ], width=4)
                 ], className='mb-4'),
                 # Visualization
                 dbc.Row([
@@ -158,10 +186,36 @@ layout = html.Div([
                     ])
                 ], className='mb-4'),
                 # Save Graph Button
+                dbc.Row([
+                    dbc.Col([
+                        html.Button('Save Graph', id='save-graph-button', className='mt-3 mb-4', style={
+                                'alignItems': 'center',
+                                'justifyContent': 'center',
+                                'width': '100%',
+                                'height': '40px',
+                                'borderWidth': '1px',
+                                'borderRadius': '5px',
+                                'margin': '10px'
+                            }), 
+                        html.Div(id='saved-graphs-container')
+                    ], width=3)
+                ], className='mb-4'),
+
+                
             ]),
             # Tab 4: Analytics Summary
             dbc.Tab(label='Analytics', children=[
-                
+                html.H5("Choose Data Analysis Method", className="mb-4"),
+                dcc.Dropdown(
+                    id='data-analysis-dropdown',
+                    options=[
+                        {'label': 'Clustering', 'value': 'clustering'},
+                        {'label': 'Classification', 'value': 'classification'}
+                    ],
+                    placeholder="Select an analysis method...",
+                    value=None
+                ),
+                html.Div(id='analysis-content') 
             ]),
         ]),
     ])
@@ -281,7 +335,7 @@ def generate_column_summary_box(df, column_name):
         ])
 
 @app.callback(
-    [Output('output-data-upload', 'children'), Output('summary-output', 'children')],
+    [Output('output-data-upload', 'children'), Output('stored-data', 'data')],
     Input('upload-data', 'contents'),
     State('file-type-dropdown', 'value'),
     prevent_initial_call=True
@@ -299,26 +353,11 @@ def update_output(contents, file_type):
                 editable=True,
                 page_size=15
             )
-            
-            # Generate the summary boxes
-            summary_boxes = [generate_column_summary_box(df, column_name) for column_name in df.columns]
-
-            # Arrange the summary boxes in a 2-box-per-row layout
-            rows = []
-            for i in range(0, len(summary_boxes), 2):  # Step by 2 for pairs
-                box1 = summary_boxes[i]
-                # Check if there's a second box in the pair, if not, just use an empty Div
-                box2 = summary_boxes[i+1] if (i+1) < len(summary_boxes) else html.Div()
-                row = dbc.Row([
-                    dbc.Col(box1, width=6),
-                    dbc.Col(box2, width=6)
-                ])
-                rows.append(row)
-
-            return data_table, rows
+            return data_table, df.to_dict('records')
         
     # Returning an empty div to ensure no data is displayed if conditions aren't met.
-    return html.Div(), html.Div()
+    return html.Div(), {}
+
         
 @app.callback(
     Output('download', 'data'),
@@ -389,3 +428,30 @@ def handle_dropdown_actions(n_clicks_convert, n_clicks_clean, table_data):
             df[column_name].fillna(most_frequent, inplace=True)
 
     return df.to_dict('records')
+
+@app.callback(
+    Output('summary-output', 'children'),
+    [Input('stored-data', 'data'),
+     Input({'type': 'convert', 'index': ALL, 'to': ALL}, 'n_clicks'),
+     Input({'type': 'clean', 'index': ALL, 'action': ALL}, 'n_clicks')],
+    prevent_initial_call=True
+)
+def update_summary(data, n_clicks_convert, n_clicks_clean):
+    df = pd.DataFrame(data)
+
+    # Generate the summary boxes
+    summary_boxes = [generate_column_summary_box(df, column_name) for column_name in df.columns]
+
+    # Arrange the summary boxes in a 2-box-per-row layout
+    rows = []
+    for i in range(0, len(summary_boxes), 2):  # Step by 2 for pairs
+        box1 = summary_boxes[i]
+        # Check if there's a second box in the pair, if not, just use an empty Div
+        box2 = summary_boxes[i+1] if (i+1) < len(summary_boxes) else html.Div()
+        row = dbc.Row([
+            dbc.Col(box1, width=6),
+            dbc.Col(box2, width=6)
+        ])
+        rows.append(row)
+
+    return rows
