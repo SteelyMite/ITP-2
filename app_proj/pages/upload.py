@@ -108,101 +108,67 @@ layout = html.Div([
                 html.Div(id='summary-output'),
             ]),
             # Tab 3: Visualisation Summary
-            dbc.Tab(label='Visualisation', children=[
-                # column selection
-                dbc.Row([
-                    # x axis column
-                    dbc.Col([
-                        html.Label('Select X-axis column:'),
-                        dcc.Dropdown(
-                            id='xaxis-column-dropdown',
-                            options=[],
-                            placeholder="Select a column for X-axis...",
-                            value=None,
-                            style={
-                                'alignItems': 'center',
-                                'justifyContent': 'center',
-                                'width': '100%',
-                                'height': '40px',
-                                'borderWidth': '1px',
-                                'borderRadius': '5px',
-                                'margin': '10px'
-                            },
-                        )
-                    ], width=4),
-                    # y axis column
-                    dbc.Col([
-                        html.Label('Select Y-axis column:'),
-                        dcc.Dropdown(
-                            id='yaxis-column-dropdown',
-                            options=[],
-                            placeholder="Select a column for Y-axis...",
-                            value=None,
-                            style={
-                                'alignItems': 'center',
-                                'justifyContent': 'center',
-                                'width': '100%',
-                                'height': '40px',
-                                'borderWidth': '1px',
-                                'borderRadius': '5px',
-                                'margin': '10px'
-                            }
-                        ),
-                    ], width=4),
-                    # graph type
-                    dbc.Col([
-                        html.Label('Select visualization type:'),
-                        dcc.Dropdown(
-                            id='visualization-type-dropdown',
-                            options=[
-                                {'label': 'Scatter Plot', 'value': 'scatter'},
-                                {'label': 'Line Plot', 'value': 'line'},
-                                {'label': 'Bar Chart', 'value': 'bar'},
-                                {'label': 'Pie Chart', 'value': 'pie'},
-                                {'label': 'Histogram', 'value': 'histogram'},
-                                {'label': 'Box Plot', 'value': 'box'},
-                                {'label': '3D Scatter Plot', 'value': '3dscatter'},
-                                {'label': 'Area Plot', 'value': 'area'},
-                                {'label': 'Violin Plot', 'value': 'violin'}
-                            ],
-                            placeholder="Select a type...",
-                            value=None,
-                            style={
-                                'alignItems': 'center',
-                                'justifyContent': 'center',
-                                'width': '100%',
-                                'height': '40px',
-                                'borderWidth': '1px',
-                                'borderRadius': '5px',
-                                'margin': '10px'
-                            }
-                        ),
-                    ], width=4)
-                ], className='mb-4'),
-                # Visualization
-                dbc.Row([
-                    dbc.Col([
-                        dcc.Graph(id='visualization-graph')  # display the selected visualization
-                    ])
-                ], className='mb-4'),
-                # Save Graph Button
-                dbc.Row([
-                    dbc.Col([
-                        html.Button('Save Graph', id='save-graph-button', className='mt-3 mb-4', style={
-                                'alignItems': 'center',
-                                'justifyContent': 'center',
-                                'width': '100%',
-                                'height': '40px',
-                                'borderWidth': '1px',
-                                'borderRadius': '5px',
-                                'margin': '10px'
-                            }), 
-                        html.Div(id='saved-graphs-container')
-                    ], width=3)
-                ], className='mb-4'),
+             dbc.Tab(label='Visualisation', children=[
+    # selection
+    dbc.Row([
+        dbc.Col([
+    html.Label('Select X-axis column:'),
+    dcc.Dropdown(
+        id='xaxis-viscolumn-dropdown',
+        options=[],
+        placeholder="Select a column for X-axis...",
+        value=None
+    ),
+], width=4),
+dbc.Col([
+    html.Label('Select Y-axis column:'),
+    dcc.Dropdown(
+        id='yaxis-viscolumn-dropdown',
+        options=[],
+        placeholder="Select a column for Y-axis...",
+        value=None
+    ),
+], width=4),
+        dbc.Col([
+            html.Label('Select visualization type:'),
+            dcc.Dropdown(
+                id='visualization-type-dropdown',
+                options=[
+                      {'label': 'Scatter Plot', 'value': 'scatter'},
+            {'label': 'Line Plot', 'value': 'line'},
+            {'label': 'Bar Chart', 'value': 'bar'},
+            {'label': 'Pie Chart', 'value': 'pie'},
+            {'label': 'Histogram', 'value': 'histogram'},
+            {'label': 'Box Plot', 'value': 'box'},
+            {'label': '3D Scatter Plot', 'value': '3dscatter'},
+            {'label': 'Area Plot', 'value': 'area'},
+            {'label': 'Violin Plot', 'value': 'violin'}
+                ],
+                placeholder="Select a type...",
+                value=None
+            ),
+        ], width=6)
+    ], className='mb-4'),  # spacing
+    
+    # Visualization
+    dbc.Row([
+        dbc.Col([
+            dcc.Graph(id='visualisation-graph')  # display the selected visualization
+        ])
+    ], className='mb-4'),
+dbc.Row([
+    dbc.Col([
+    ])
+], className='mb-4'),
+html.Button('Save Graph', id='save-graph-button', className='mt-3 mb-4'), 
+html.Div(id='saved-visgraphs-container')
+    
+]),
+# //////////////////
+# //////////////////
+# //////////////////
 
-                
-            ]),
+
             # Tab 4: Analytics Summary
             dbc.Tab(label='Analytics', children=[
                 html.H5("Choose Data Analysis Method", className="mb-4"),
@@ -455,3 +421,87 @@ def update_summary(data, n_clicks_convert, n_clicks_clean):
         rows.append(row)
 
     return rows
+
+
+# VISUALISATION
+
+
+
+@app.callback(
+    Output('datatable-upload-container', 'data'),
+    Output('datatable-upload-container', 'columns'),
+    Output('xaxis-viscolumn-dropdown', 'options'),
+    Output('yaxis-viscolumn-dropdown', 'options'),
+    Input('upload-data', 'contents'),
+    State('file-type-dropdown', 'value')
+)
+def update_output(contents, file_type):
+    if contents is None:
+        return [], [], [], []
+    
+    df = parse_contents(contents, file_type)
+    if df is None:
+        return [], [], [], []
+
+    columns = [{"name": i, "id": i} for i in df.columns]
+    data = df.to_dict('records')
+    options = [{'label': col, 'value': col} for col in df.columns]
+
+    return data, columns, options, options
+
+
+@app.callback(
+    Output('visualisation-graph', 'figure'),
+    Input('xaxis-viscolumn-dropdown', 'value'),
+    Input('yaxis-viscolumn-dropdown', 'value'),
+    Input('visualization-type-dropdown', 'value'),
+    State('datatable-upload-container', 'data')
+)
+def update_graph(x_column, y_column, vis_type, data):
+    if not data or not x_column or not y_column or not vis_type:
+        return {}
+
+    df = pd.DataFrame(data)
+
+    if vis_type == 'scatter':
+        fig = px.scatter(df, x=x_column, y=y_column)
+    elif vis_type == 'line':
+        fig = px.line(df, x=x_column, y=y_column)
+    elif vis_type == 'bar':
+        fig = px.bar(df, x=x_column, y=y_column)
+    elif vis_type == 'pie':
+        fig = px.pie(df, names=x_column, values=y_column)
+    elif vis_type == 'histogram':
+        fig = px.histogram(df, x=x_column)
+    elif vis_type == 'box':
+        fig = px.box(df, x=x_column, y=y_column)
+    elif vis_type == '3dscatter':
+        fig = px.scatter_3d(df, x=x_column, y=y_column)
+    elif vis_type == 'area':
+        fig = px.area(df, x=x_column, y=y_column)
+    elif vis_type == 'violin':
+        fig = px.violin(df, x=x_column, y=y_column)
+    else:
+        return {}
+
+    return fig
+
+
+
+@app.callback(
+    Output('saved-visgraphs-container', 'children'),
+    [Input('save-graph-button', 'n_clicks')],
+    [State('visualisation-graph', 'figure'),
+     State('saved-visgraphs-container', 'children')]
+)
+
+def save_current_graph(n_clicks, current_figure, current_saved_graphs):
+    if not current_figure:
+        raise dash.exceptions.PreventUpdate
+    current_graph = dcc.Graph(figure=current_figure)
+    if not current_saved_graphs:
+        current_saved_graphs = []
+    current_saved_graphs.append(current_graph)
+    return current_saved_graphs
+
+
