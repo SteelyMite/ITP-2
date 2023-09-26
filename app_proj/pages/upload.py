@@ -109,63 +109,63 @@ layout = html.Div([
             ]),
             # Tab 3: Visualisation Summary
              dbc.Tab(label='Visualisation', children=[
-    # selection
-    dbc.Row([
-        dbc.Col([
-    html.Label('Select X-axis column:'),
-    dcc.Dropdown(
-        id='xaxis-viscolumn-dropdown',
-        options=[],
-        placeholder="Select a column for X-axis...",
-        value=None
-    ),
-], width=4),
-dbc.Col([
-    html.Label('Select Y-axis column:'),
-    dcc.Dropdown(
-        id='yaxis-viscolumn-dropdown',
-        options=[],
-        placeholder="Select a column for Y-axis...",
-        value=None
-    ),
-], width=4),
-        dbc.Col([
-            html.Label('Select visualization type:'),
-            dcc.Dropdown(
-                id='visualization-type-dropdown',
-                options=[
-                      {'label': 'Scatter Plot', 'value': 'scatter'},
-            {'label': 'Line Plot', 'value': 'line'},
-            {'label': 'Bar Chart', 'value': 'bar'},
-            {'label': 'Pie Chart', 'value': 'pie'},
-            {'label': 'Histogram', 'value': 'histogram'},
-            {'label': 'Box Plot', 'value': 'box'},
-            {'label': '3D Scatter Plot', 'value': '3dscatter'},
-            {'label': 'Area Plot', 'value': 'area'},
-            {'label': 'Violin Plot', 'value': 'violin'}
-                ],
-                placeholder="Select a type...",
-                value=None
-            ),
-        ], width=6)
-    ], className='mb-4'),  # spacing
-    
-    # Visualization
-    dbc.Row([
-        dbc.Col([
-            dcc.Graph(id='visualisation-graph')  # display the selected visualization
-        ])
-    ], className='mb-4'),
-dbc.Row([
-    dbc.Col([
-    ])
-], className='mb-4'),
-html.Button('Save Graph', id='save-graph-button', className='mt-3 mb-4'), 
-html.Div(id='saved-visgraphs-container')
-    
-]),
-# //////////////////
-# //////////////////
+                # selection
+                dbc.Row([
+                    dbc.Col([
+                        html.Label('Select X-axis column:'),
+                        dcc.Dropdown(
+                            id='xaxis-viscolumn-dropdown',
+                            options=[],
+                            placeholder="Select a column for X-axis...",
+                            value=None
+                        ),
+                    ], width=4),
+            dbc.Col([
+                html.Label('Select Y-axis column:'),
+                dcc.Dropdown(
+                    id='yaxis-viscolumn-dropdown',
+                    options=[],
+                    placeholder="Select a column for Y-axis...",
+                    value=None
+                ),
+            ], width=4),
+                    dbc.Col([
+                        html.Label('Select visualization type:'),
+                        dcc.Dropdown(
+                            id='visualization-type-dropdown',
+                            options=[
+                                {'label': 'Scatter Plot', 'value': 'scatter'},
+                        {'label': 'Line Plot', 'value': 'line'},
+                        {'label': 'Bar Chart', 'value': 'bar'},
+                        {'label': 'Pie Chart', 'value': 'pie'},
+                        {'label': 'Histogram', 'value': 'histogram'},
+                        {'label': 'Box Plot', 'value': 'box'},
+                        {'label': '3D Scatter Plot', 'value': '3dscatter'},
+                        {'label': 'Area Plot', 'value': 'area'},
+                        {'label': 'Violin Plot', 'value': 'violin'}
+                            ],
+                            placeholder="Select a type...",
+                            value=None
+                        ),
+                    ], width=6)
+                ], className='mb-4'),  
+                
+                # Visualization
+                dbc.Row([
+                    dbc.Col([
+                        dcc.Graph(id='visualisation-graph')  # display the selected visualization
+                    ])
+                ], className='mb-4'),
+            dbc.Row([
+                dbc.Col([
+                ])
+            ], className='mb-4'),
+            html.Button('Save Graph', id='save-graph-button', className='mt-3 mb-4'), 
+            html.Div(id='saved-visgraphs-container')
+                
+            ]),
+            # //////////////////
+            # //////////////////
 # //////////////////
 
 

@@ -1,0 +1,48 @@
+/* General styles for the entire app */
+body {
+    font-family: Arial, sans-serif;
+}
+
+/* Style for all dropdown components */
+.Select-control {
+    border-radius: 5px;
+    margin: 10px;
+    height: 40px;
+}
+
+/* Style for all buttons */
+button {
+    border-radius: 5px;
+    margin: 10px;
+    height: 40px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.custom-dropdown {
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 40px;
+    border-width: 1px;
+    border-radius: 5px;
+    margin: 10px;
+}
+
+.custom-button {
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 40px;
+    border-width: 1px;
+    border-radius: 5px;
+    margin: 10px;
+    cursor: pointer;  /* Makes it clear it's clickable */
+    transition: background-color 0.3s;  /* Optional: smooth transition for hover effects */
+}
+
+.custom-button:hover {
+    background-color: #e0e0e0;  /* Change to desired hover color */
+}
