@@ -171,28 +171,20 @@ layout = html.Div([
                     ], width=4)
                 ], className='mb-4'),
 
-                # Column Selection for Classification
-                dbc.Row([
-                    dbc.Col([
-                        html.Label("Select Column for Classification:"),
-                        dcc.Dropdown(id='classification-column-dropdown', placeholder="Select a column...", className='custom-dropdown')
-                    ], width=4)
-                ], className='mb-4'),
-
-                # Number of Clusters (only for clustering)
-                dbc.Row([
-                    dbc.Col([
-                        html.Label("Number of Clusters:"),
-                        dcc.Input(id='num-clusters-input', type='number', min=2, step=1, value=2)
-                    ], width=4)
-                ], className='mb-4'),
-
-                # Visualization
+                # Dynamic content placeholder
+                html.Div(id='dynamic-content'),
                 dbc.Row([
                     dbc.Col([
                         dcc.Graph(id='analysis-graph')
                     ])
+                ], className='mb-4'),
+                dbc.Row([
+                    dbc.Col([
+                        html.Button('Run Analysis', id='run-analysis-button', className='custom-button')
+                    ], width=4)
                 ], className='mb-4')
+
+
             ]),
         ]),
     ])
