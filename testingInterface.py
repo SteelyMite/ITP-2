@@ -13,10 +13,8 @@ app.layout = html.Div([
     # Button to trigger the update
     html.Button("Update Page", id="update-button"),
     
-    # Placeholder for displaying the HTML object returned by FunctionName()
     html.Div(id='output-html'),
     
-    # Placeholder for displaying the Dash Plots returned by FunctionName()
     html.Div(id='output-plots'),
 ])
 

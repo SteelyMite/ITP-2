@@ -60,50 +60,39 @@ def classification_SVM(inputData, selectedColumns, targetColumn):
     
 
     # Create the confusion matrix plot
-    figure = generateConfusionMatrix(cm)
+    figure = generateConfusionMatrix(cm,class_labels=classifier.classes_)
 
     # # Create Decision Boundary plot
     # # Create scatter plot
     # plt.figure(figsize=(10, 6))
-
     # # Scatter plot for class 0
     # support_vectors = classifier.support_vectors_
     # plt.scatter(X_train[y_train == 0]['feature1'], X_train[y_train == 0]['feature2'], label='Class 0', c='b')
-
     # # Scatter plot for class 1
     # plt.scatter(X_train[y_train == 1]['feature1'], X_train[y_train == 1]['feature2'], label='Class 1', c='r')
-
     # # Scatter plot for support vectors
     # plt.scatter(support_vectors[:, 0], support_vectors[:, 1], c='g', marker='*', s=100, label='Support Vectors')
-
     # # Decision boundary
     # xx, yy = np.meshgrid(np.linspace(X_train['feature1'].min(), X_train['feature1'].max(), 100),
     #                     np.linspace(X_train['feature2'].min(), X_train['feature2'].max(), 100))
     # Z = classifier.decision_function(np.c_[xx.ravel(), yy.ravel()])
     # Z = Z.reshape(xx.shape)
     # plt.contour(xx, yy, Z, colors='k', levels=[-1, 0, 1], linestyles=['--', '-', '--'])
-
     # plt.xlabel('Feature 1')
     # plt.ylabel('Feature 2')
     # plt.legend()
     # plt.title('SVM Classification with Decision Boundary')
-
     # plt.show()
-
-
-
-
-
     fig.append(figure)
 
     return fig, statistics
 
-
-def generateConfusionMatrix(cm):
+def generateConfusionMatrix(cm, class_labels):
+    # Create a trace for the heatmap
     heatmap = go.Heatmap(
         z=cm,
-        x=["Predicted 0", "Predicted 1"],
-        y=["True 0", "True 1"],
+        x=class_labels,
+        y=class_labels,
         colorscale="Blues",
         colorbar=dict(title="Count"),
     )
@@ -114,6 +103,7 @@ def generateConfusionMatrix(cm):
         xaxis=dict(title="Predicted labels"),
         yaxis=dict(title="True labels"),
     )
+
     return go.Figure(data=[heatmap], layout=layout)
 
 
