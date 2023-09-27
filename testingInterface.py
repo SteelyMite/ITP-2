@@ -1,79 +1,48 @@
-import dash
-from dash import dcc
-from dash import html
-from dash.dependencies import Input, Output, State
-import plotly.express as px
 import pandas as pd
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output, State
+import temp  # Import the module containing FunctionName
 
-# Sample DataFrame for testing (replace with your actual DataFrame)
-df = pd.DataFrame({'x': [1, 2, 3, 4, 5], 'y': [2, 4, 1, 5, 2]})
-
-# Define the Dash app
 app = dash.Dash(__name__)
 
-# Define the layout of the app
+# Define the layout of the web application
 app.layout = html.Div([
-    html.H1("Dynamic Dash App with Variable Plots"),
+    html.H1("Testing Output"),
     
-    html.Div(id='content'),
+    # Button to trigger the update
+    html.Button("Update Page", id="update-button"),
     
-    html.Button("Update Content", id='update-button'),
+    # Placeholder for displaying the HTML object returned by FunctionName()
+    html.Div(id='output-html'),
     
-    # Use dcc.Store to store the variable-length data
-    dcc.Store(id='plot-data-store'),
-    
-    # Use a callback to update plots dynamically
-    dcc.Loading(
-        id="loading",
-        type="default",
-        children=[html.Div(id="dynamic-plots")]
-    )
+    # Placeholder for displaying the Dash Plots returned by FunctionName()
+    html.Div(id='output-plots'),
 ])
 
-# Define the function to update the page content and generate variable-length plots
-def UpdatePage():
-    # Generate new content for the div (replace with your logic)
-    new_content = html.Div([
-        html.P("Updated content here."),
-        html.P("More updated content."),
-    ])
-    
-    # Generate variable-length plots (replace with your logic)
-    plot_data = []
-    # Example: Generate random variable-length plots
-    for i in range(1, 5):
-        data = df.sample(i)  # Sample a subset of data
-        plot = px.scatter(data, x='x', y='y', title=f'Scatter Plot {i}')
-        plot_data.append(plot)
-    
-    return new_content, plot_data
-
-# Define a callback to update the content and store the variable-length plots
 @app.callback(
-    [Output('content', 'children'),
-     Output('plot-data-store', 'data')],
-    Input('update-button', 'n_clicks')
+    [Output('output-html', 'children'), Output('output-plots', 'children')],
+    [Input('update-button', 'n_clicks')],
+    prevent_initial_call=True
 )
-def update_content_and_store_plots(n_clicks):
+def update_output(n_clicks):
     if n_clicks is None:
-        return dash.no_update, dash.no_update
+        return dash.no_update
     
-    content, plots = UpdatePage()
-    return content, plots
+    # Call the FunctionName() method from your module
+    # Replace 'your_module' with the actual module name
+    df = pd.read_csv('iris.csv')
+    selectedColumns = ["Column One", "Column Three"]
+    numClusters = 3
+    print(df.columns)
+    # plot_list,html_obj, = temp.clustering_KMeans(df, selectedColumns, numClusters)
+    plot_list,html_obj, = temp.classification_SVM(df, selectedColumns, "Label")
+    # Display the HTML object
+    html_output = html_obj
 
-# Define a callback to generate the variable-length plots
-@app.callback(
-    Output('dynamic-plots', 'children'),
-    Input('plot-data-store', 'data')
-)
-def update_dynamic_plots(plot_data):
-    if not plot_data:
-        return []
-    
-    # Create dcc.Graph components for the variable-length plots
-    dynamic_plots = [dcc.Graph(figure=plot) for plot in plot_data]
-    return dynamic_plots
+    # Display the list of Dash Plots
+    plot_outputs = [dcc.Graph(figure=plot) for plot in plot_list]
+    return html_output, plot_outputs
 
-# Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)

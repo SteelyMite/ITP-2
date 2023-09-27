@@ -1,5 +1,7 @@
+from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
+import seaborn as sns
 import plotly.express as px
 import plotly.graph_objs as go
 import plotly.subplots as sp
@@ -13,8 +15,6 @@ from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
 
-df = pd.read_csv('iris.csv')
-
 def clustering_KMeans(inputData, selectedColumns,numClusters):
     kmeans = KMeans(n_clusters=numClusters)
     cluster_assignments = kmeans.fit_predict(inputData[selectedColumns])
@@ -27,8 +27,12 @@ def clustering_KMeans(inputData, selectedColumns,numClusters):
         html.P(f"Inertia (Within-cluster Sum of Squares): {inertia}")
     ])
     # Create the cluster plot
-    fig = px.scatter(df, x=selectedColumns[0], y=selectedColumns[1], color='Cluster', title='K-means Clustering')
-    return fig, statistics
+    # fig = px.scatter(df, x=selectedColumns[0], y=selectedColumns[1], color="blue", title='K-means Clustering')
+    fig = px.scatter(inputData[selectedColumns], x=selectedColumns[0], y=selectedColumns[1], color=cluster_assignments, title='K-means Clustering')
+    print(fig)
+    # Check fig data type
+    print(type(fig))
+    return [fig], statistics
 
 
 def classification_SVM(inputData, selectedColumns, targetColumn):
@@ -36,13 +40,13 @@ def classification_SVM(inputData, selectedColumns, targetColumn):
     # Split the data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(inputData[selectedColumns], inputData[targetColumn], test_size=0.2, random_state=42)
     # Create and train SVM Classifier 
-    classifier = svm.SVC(kernel='kernel')
+    classifier = svm.SVC(kernel='linear') #!What kernel?
     classifier.fit(X_train, y_train)
     # Predict labels on the test data
     y_pred = classifier.predict(X_test)
     # Calculate confusion matrix and classification report
     cm = confusion_matrix(y_test, y_pred)
-    fig.append(cm)
+    # fig.append(cm)
     class_report = classification_report(y_test, y_pred, output_dict=True)
 
     # Create data analysis HTML report 
@@ -56,28 +60,61 @@ def classification_SVM(inputData, selectedColumns, targetColumn):
     
 
     # Create the confusion matrix plot
-    labels = np.unique(cm)
-    z_text = [[str(y) for y in x] for x in classification_SVM]
+    figure = generateConfusionMatrix(cm)
 
-    figure = ff.create_annotated_heatmap(
-        z=confusion_matrix,
-        x=labels,
-        y=labels,
-        annotation_text=z_text,
-        colorscale='Viridis'
-    )
+    # # Create Decision Boundary plot
+    # # Create scatter plot
+    # plt.figure(figsize=(10, 6))
 
-    figure.update_layout(
-        title='Confusion Matrix',
-        xaxis_title='Predicted',
-    yaxis_title='True'
-    )
+    # # Scatter plot for class 0
+    # support_vectors = classifier.support_vectors_
+    # plt.scatter(X_train[y_train == 0]['feature1'], X_train[y_train == 0]['feature2'], label='Class 0', c='b')
+
+    # # Scatter plot for class 1
+    # plt.scatter(X_train[y_train == 1]['feature1'], X_train[y_train == 1]['feature2'], label='Class 1', c='r')
+
+    # # Scatter plot for support vectors
+    # plt.scatter(support_vectors[:, 0], support_vectors[:, 1], c='g', marker='*', s=100, label='Support Vectors')
+
+    # # Decision boundary
+    # xx, yy = np.meshgrid(np.linspace(X_train['feature1'].min(), X_train['feature1'].max(), 100),
+    #                     np.linspace(X_train['feature2'].min(), X_train['feature2'].max(), 100))
+    # Z = classifier.decision_function(np.c_[xx.ravel(), yy.ravel()])
+    # Z = Z.reshape(xx.shape)
+    # plt.contour(xx, yy, Z, colors='k', levels=[-1, 0, 1], linestyles=['--', '-', '--'])
+
+    # plt.xlabel('Feature 1')
+    # plt.ylabel('Feature 2')
+    # plt.legend()
+    # plt.title('SVM Classification with Decision Boundary')
+
+    # plt.show()
+
+
+
+
 
     fig.append(figure)
 
     return fig, statistics
 
 
+def generateConfusionMatrix(cm):
+    heatmap = go.Heatmap(
+        z=cm,
+        x=["Predicted 0", "Predicted 1"],
+        y=["True 0", "True 1"],
+        colorscale="Blues",
+        colorbar=dict(title="Count"),
+    )
+
+    # Define the layout for the confusion matrix plot
+    layout = go.Layout(
+        title="Confusion Matrix",
+        xaxis=dict(title="Predicted labels"),
+        yaxis=dict(title="True labels"),
+    )
+    return go.Figure(data=[heatmap], layout=layout)
 
 
 
