@@ -152,40 +152,46 @@ layout = html.Div([
                 html.Div(id='saved-visgraphs-container')
                 
             ]),
-            # Tab 4: Analytics Summary
-            dbc.Tab(label='Analytics', children=[
-                # Data Analysis Choice
-                dbc.Row([
-                    dbc.Col([
-                        html.Label("Choose Data Analysis Method:"),
-                        dcc.Dropdown(
-                            id='data-analysis-dropdown',
-                            options=[
-                                {'label': 'Clustering', 'value': 'clustering'},
-                                {'label': 'Classification', 'value': 'classification'}
-                            ],
-                            placeholder="Select an analysis method...",
-                            value=None,
-                            className='custom-dropdown'
-                        )
-                    ], width=4)
-                ], className='mb-4'),
+           # Tab 4: Analytics Summary
+dbc.Tab(label='Analytics', children=[
+    # Data Analysis Choice
+    dbc.Row([
+        dbc.Col([
+            html.Label("Choose Data Analysis Method:"),
+            dcc.Dropdown(
+                id='data-analysis-dropdown',
+                options=[
+                    {'label': 'Clustering', 'value': 'clustering'},
+                    {'label': 'Classification', 'value': 'classification'}
+                ],
+                placeholder="Select an analysis method...",
+                value=None,
+                className='custom-dropdown'
+            )
+        ], width=4)
+    ], className='mb-4'),
 
-                # Dynamic content placeholder
-                html.Div(id='dynamic-content'),
-                dbc.Row([
-                    dbc.Col([
-                        dcc.Graph(id='analysis-graph')
-                    ])
-                ], className='mb-4'),
-                dbc.Row([
-                    dbc.Col([
-                        html.Button('Run Analysis', id='run-analysis-button', className='custom-button')
-                    ], width=4)
-                ], className='mb-4')
+    # Dynamic content placeholder for additional inputs
+    html.Div(id='dynamic-content'),
 
+    # The main graph and results display
+    dbc.Row([
+        dbc.Col([
+            dcc.Graph(id='analysis-graph')
+        ])
+    ], className='mb-4'),
+
+    # Analysis statistics
+    html.Div(id='analysis-statistics'),
+
+    dbc.Row([
+        dbc.Col([
+            html.Button('Run Analysis', id='run-analysis-button', className='custom-button')
+        ], width=4)
+    ], className='mb-4')
+]),
 
             ]),
         ]),
     ])
-])
+
