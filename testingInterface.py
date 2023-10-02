@@ -27,12 +27,13 @@ def update_output(n_clicks):
     if n_clicks is None:
         return dash.no_update
     
-    # df = pd.read_csv('iris.csv')
-    df = pd.read_csv('iris_binary.csv')
-    selectedColumns = ["Column One", "Column Three"]
-    numClusters = 3
-    # plot_list,html_obj, = temp.clustering_KMeans(df, selectedColumns, numClusters)
-    plot_list,html_obj, = temp.classification_SVM(df, selectedColumns, "Label","linear")
+    df = pd.read_csv('iris.csv')
+    # df = pd.read_csv('iris_binary.csv')
+    # selectedColumns = ["Column One", "Column Three"]
+    selectedColumns = ["Column One","Column Two","Column Three", "Column Four"]
+    numClusters = 4
+    plot_list,html_obj, = temp.clustering_KMeans(df, selectedColumns, numClusters)
+    # plot_list,html_obj, = temp.classification_SVM(df, selectedColumns, "Label","linear")
     # Display the HTML object
     html_output = html_obj
 

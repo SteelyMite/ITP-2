@@ -16,24 +16,51 @@ from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
 
+# !Make sure the functions return a list of plots and a HTML object 
+# !Make sure plots are of type plotly.graph_objs._figure.Figure
+
+
 def clustering_KMeans(inputData, selectedColumns,numClusters):
+    fig = []
     kmeans = KMeans(n_clusters=numClusters)
     cluster_assignments = kmeans.fit_predict(inputData[selectedColumns])
+
+    #? Create data analysis HTML report
     cluster_centers = kmeans.cluster_centers_
     inertia = kmeans.inertia_
+
+    cluster_center_x = cluster_centers[:, 0]  # X-coordinates of cluster centers
+    cluster_center_y = cluster_centers[:, 1]  # Y-coordinates of cluster centers
+
+
+
+
+
     statistics = html.Div([
         html.H4("Cluster Statistics:"),
         html.P(f"Number of Clusters (K): {numClusters}"),
         html.P(f"Cluster Centers:\n{cluster_centers}"),
         html.P(f"Inertia (Within-cluster Sum of Squares): {inertia}")
     ])
-    # Create the cluster plot
+    #? Generate Plots
     # fig = px.scatter(df, x=selectedColumns[0], y=selectedColumns[1], color="blue", title='K-means Clustering')
-    fig = px.scatter(inputData[selectedColumns], x=selectedColumns[0], y=selectedColumns[1], color=cluster_assignments, title='K-means Clustering')
-    print(fig)
-    # Check fig data type
-    print(type(fig))
-    return [fig], statistics
+    # fig = px.scatter(inputData[selectedColumns], x=selectedColumns[0], y=selectedColumns[1], color=cluster_assignments, title='K-means Clustering')
+
+
+    #plotting the results:
+    for i in range(len(selectedColumns)):
+        for j in range(len(selectedColumns)):   
+            if(i!=j):
+                scatter_plot = px.scatter(inputData[selectedColumns], x=selectedColumns[i], y=selectedColumns[j], color=cluster_assignments, title='K-means Clustering')
+           
+                fig.append(scatter_plot)   
+
+
+    # fig.append(px.scatter(inputData[selectedColumns], x=selectedColumns[0], y=selectedColumns[1], color=cluster_assignments, title='K-means Clustering'))
+
+
+
+    return fig, statistics
 
 
 def classification_SVM(inputData, selectedColumns, targetColumn,kernel):
@@ -101,6 +128,4 @@ def generateConfusionMatrix(cm, class_labels):
     )
 
     return go.Figure(data=[heatmap], layout=layout)
-
-
 
