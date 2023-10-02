@@ -29,12 +29,6 @@ def clustering_KMeans(inputData, selectedColumns,numClusters):
     cluster_centers = kmeans.cluster_centers_
     inertia = kmeans.inertia_
 
-    cluster_center_x = cluster_centers[:, 0]  # X-coordinates of cluster centers
-    cluster_center_y = cluster_centers[:, 1]  # Y-coordinates of cluster centers
-
-
-
-
 
     statistics = html.Div([
         html.H4("Cluster Statistics:"),
@@ -43,23 +37,11 @@ def clustering_KMeans(inputData, selectedColumns,numClusters):
         html.P(f"Inertia (Within-cluster Sum of Squares): {inertia}")
     ])
     #? Generate Plots
-    # fig = px.scatter(df, x=selectedColumns[0], y=selectedColumns[1], color="blue", title='K-means Clustering')
-    # fig = px.scatter(inputData[selectedColumns], x=selectedColumns[0], y=selectedColumns[1], color=cluster_assignments, title='K-means Clustering')
-
-
-    #plotting the results:
     for i in range(len(selectedColumns)):
         for j in range(len(selectedColumns)):   
             if(i!=j):
-                scatter_plot = px.scatter(inputData[selectedColumns], x=selectedColumns[i], y=selectedColumns[j], color=cluster_assignments, title='K-means Clustering')
-           
+                scatter_plot = px.scatter(inputData[selectedColumns], x=selectedColumns[i], y=selectedColumns[j], color=cluster_assignments, title='K-means Clustering')           
                 fig.append(scatter_plot)   
-
-
-    # fig.append(px.scatter(inputData[selectedColumns], x=selectedColumns[0], y=selectedColumns[1], color=cluster_assignments, title='K-means Clustering'))
-
-
-
     return fig, statistics
 
 
