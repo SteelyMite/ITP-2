@@ -57,6 +57,7 @@ layout = html.Div([
                             },
                             multiple=False
                         ),
+                        html.Div(id='error-message', style={'color': 'red'}),
                     ], width=3),
                     # Export File Type Dropdown
                     dbc.Col([
@@ -183,9 +184,11 @@ layout = html.Div([
                         html.Button('Run Analysis', id='run-analysis-button', className='custom-button')
                     ], width=4)
                 ], className='mb-4')
-
-
             ]),
+            # Tab 5: State Summary
+            dbc.Tab(label='State Summary', children=[
+            
+            ])
         ]),
     ])
 ])

@@ -90,10 +90,11 @@ def handle_dropdown_actions(n_clicks_convert, n_clicks_clean, stored_data):
         # Handle normalization actions
         elif prop_info['action'] == "normalize_new":
             normalized_col_name = "normalized_" + column_name
-            df[normalized_col_name] = (df[column_name] - df[column_name].min()) / (df[column_name].max() - df[column_name].min())
+            normalized_values = (df[column_name] - df[column_name].min()) / (df[column_name].max() - df[column_name].min())
+            df[normalized_col_name] = normalized_values.round(3)
         elif prop_info['action'] == "normalize_replace":
-            df[column_name] = (df[column_name] - df[column_name].min()) / (df[column_name].max() - df[column_name].min())
-
+            normalized_values = (df[column_name] - df[column_name].min()) / (df[column_name].max() - df[column_name].min())
+            df[column_name] = normalized_values.round(3)
     return [df.to_dict('records')]
 
 @app.callback(
