@@ -30,7 +30,8 @@ def update_output(n_clicks):
     df = pd.read_csv('iris.csv')
     # df = pd.read_csv('iris_binary.csv')
     # selectedColumns = ["Column One", "Column Three"]
-    selectedColumns = ["Column One","Column Two","Column Three", "Column Four"]
+    selectedColumns = ["Column One", "Column Two", "Column Three"]
+    # selectedColumns = ["Column One","Column Two","Column Three", "Column Four"]
     numClusters = 4
     plot_list,html_obj, = temp.clustering_KMeans(df, selectedColumns, numClusters)
     # plot_list,html_obj, = temp.classification_SVM(df, selectedColumns, "Label","linear")
