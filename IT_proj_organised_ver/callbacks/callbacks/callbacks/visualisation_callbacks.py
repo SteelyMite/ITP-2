@@ -59,8 +59,6 @@ def update_graph(x_column, y_column, vis_type, data):
         fig = px.histogram(df, x=x_column)
     elif vis_type == 'box':
         fig = px.box(df, x=x_column, y=y_column)
-    elif vis_type == '3dscatter':
-        fig = px.scatter_3d(df, x=x_column, y=y_column)
     elif vis_type == 'area':
         fig = px.area(df, x=x_column, y=y_column)
     elif vis_type == 'violin':

@@ -126,7 +126,6 @@ layout = html.Div([
                                 {'label': 'Pie Chart', 'value': 'pie'},
                                 {'label': 'Histogram', 'value': 'histogram'},
                                 {'label': 'Box Plot', 'value': 'box'},
-                                {'label': '3D Scatter Plot', 'value': '3dscatter'},
                                 {'label': 'Area Plot', 'value': 'area'},
                                 {'label': 'Violin Plot', 'value': 'violin'}
                             ],
@@ -174,6 +173,9 @@ dbc.Tab(label='Analytics', children=[
     # Dynamic content placeholder for additional inputs
     html.Div(id='dynamic-content'),
 
+     # Analysis statistics
+    html.Div(id='analysis-statistics'),
+
     # The main graph and results display
     dbc.Row([
         dbc.Col([
@@ -181,8 +183,7 @@ dbc.Tab(label='Analytics', children=[
         ])
     ], className='mb-4'),
 
-    # Analysis statistics
-    html.Div(id='analysis-statistics'),
+   
 
     dbc.Row([
         dbc.Col([
