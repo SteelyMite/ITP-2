@@ -8,28 +8,30 @@ from app_instance import app
 from utils import parse_contents
 
 @app.callback(
-    [Output('output-data-upload', 'children'), Output('stored-data', 'data', allow_duplicate=True)],
+    [Output('output-data-upload', 'children'), 
+     Output('error-message', 'children'), 
+     Output('stored-data', 'data', allow_duplicate=True)],
     Input('upload-data', 'contents'),
     State('file-type-dropdown', 'value'),
     prevent_initial_call=True
 )
 def update_output(contents, file_type):
-    if contents is not None:
+    if contents is None:
+        raise dash.exceptions.PreventUpdate
+
+    try:
         df = parse_contents(contents, file_type)
-        if df is not None:
-            # Generate the datatable
-            data_table = dash_table.DataTable(
-                id='table',
-                data=df.to_dict('records'),
-                columns=[{'name': i, 'id': i, 'editable': True} for i in df.columns],
-                style_table={'overflowX': 'auto'},
-                editable=True,
-                page_size=20
-            )
-            return data_table, df.to_dict('records')
-        
-    # Returning an empty div to ensure no data is displayed if conditions aren't met.
-    return html.Div(), {}
+        data_table = dash_table.DataTable(
+            id='table',
+            data=df.to_dict('records'),
+            columns=[{'name': i, 'id': i, 'editable': True} for i in df.columns],
+            style_table={'overflowX': 'auto'},
+            editable=True,
+            page_size=20
+        )
+        return data_table, "", df.to_dict('records')
+    except ValueError as e:
+        return html.Div(), str(e), {}
 
 @app.callback(
     Output('stored-data', 'data'),
