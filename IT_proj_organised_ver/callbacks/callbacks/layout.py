@@ -168,30 +168,60 @@ layout = html.Div([
                             value=None,
                             className='custom-dropdown'
                         )
-                    ], width=4)
+                    ], width=4),                
                 ], className='mb-4'),
 
-    # Dynamic content placeholder for additional inputs
-    html.Div(id='dynamic-content'),
+                # Dynamic content placeholder for additional inputs
+                html.Div(id='dynamic-content'),
 
-    # The main graph and results display
-    dbc.Row([
-        dbc.Col([
-            dcc.Graph(id='analysis-graph')
-        ])
-    ], className='mb-4'),
+                # The main graph and results display
+                dbc.Row([
+                    dbc.Col([
+                        dcc.Graph(id='analysis-graph')
+                    ])
+                ], className='mb-4'),
 
-    # Analysis statistics
-    html.Div(id='analysis-statistics'),
+                # Analysis statistics
+                html.Div(id='analysis-statistics'),
 
-    dbc.Row([
-        dbc.Col([
-            html.Button('Run Analysis', id='run-analysis-button', className='custom-button')
-        ], width=4)
-    ], className='mb-4')
-]),
-
+                dbc.Row([
+                    dbc.Col([
+                        html.Button('Run Analysis', id='run-analysis-button', className='custom-button')
+                    ], width=4)
+                ], className='mb-4'),
+                
+                dbc.Row([
+                    dbc.Col([
+                        dcc.Store(id='input-dict-store', data=[
+                            {
+                                "Input": "number_selection",
+                                "DataType": "numeric",
+                                "Text": "1. Choose a number 2-5:",
+                                "AcceptableValues": {"min": 2, "max": 5}
+                            },
+                            {
+                                "Input": "column_selection",
+                                "DataType": "both",
+                                "Text": "2. Choose 3 columns:",
+                                "AcceptableValues": 3
+                            },
+                            {
+                                "Input": "dropdown",
+                                "DataType": "numeric",
+                                "Text": "3. Choose a parameter:",
+                                "AcceptableValues": ["linear", "multilinear", "polynomial"]
+                            }
+                        ]),
+                        html.Button('Start', id='start-button', className='custom-button'),
+                        html.Div(id='dynamic-input-div'),
+                        html.Button('Perform', id='perform-button', className='custom-button'),
+                        html.Div(id='perform-result-div', style={'color': 'green', 'margin-top': '10px'}),
+                    ], width=10)
+                ], className='mb-4'),
             ]),
-        ]),
-    ])
 
+        ]),
+    ]),
+])
+
+                     
