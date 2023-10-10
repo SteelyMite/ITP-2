@@ -24,7 +24,9 @@ from sklearn import svm
 from sklearn.metrics import confusion_matrix, classification_report
 
 from app_instance import app
-
+import Data_Analysis_Func_Parameters as func_params
+import Data_Analysis_Methods as func_methods
+from func_methods import clustering_KMeans, classification_SVM
 
 # from cluster_class_callbacks import classification_SVM
 
@@ -35,6 +37,11 @@ from app_instance import app
     Input('num-clusters-input', 'value'),
     prevent_initial_call=True
 )
+def randomMethod():
+    func_methods.clustering_KMeans(inputData, selectedColumns,numClusters)
+    return 
+
+
 def clustering_KMeans(stored_data, selectedColumns, numClusters):
     if stored_data.empty:
         return []
