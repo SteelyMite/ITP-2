@@ -9,23 +9,19 @@ import dash_bootstrap_components as dbc
 def parse_contents(contents, file_type):
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
-
-    if file_type not in ['csv', 'excel', 'json']:
-        raise ValueError("Unsupported file type.")
-
     try:
         if file_type == 'csv':
             df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
         elif file_type == 'excel':
             df = pd.read_excel(io.BytesIO(decoded))
         elif file_type == 'json':
-            df = pd.read_json(io.StringIO(decoded.decode('utf-8')))
+            df = pd.read_json(io.BytesIO(decoded))
         else:
-            raise ValueError("Unknown file type.")
+            return None
     except Exception as e:
-        raise ValueError("Error reading file. Please check if the file type matches its content.") from e
+        print(e)
+        return None
     return df
-
 
 
 def generate_column_summary_box(df, column_name):

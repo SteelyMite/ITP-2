@@ -88,6 +88,8 @@ def classification_SVM(inputData, selectedColumns, targetColumn,kernel):
         fig.append(AUC_Plot)
 
     return fig, statistics
+
+
 def generateAUC(y_test, y_pred):
     # Calculate ROC curve and AUC
     fpr, tpr, thresholds = roc_curve(y_test, y_pred)
