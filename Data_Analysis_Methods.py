@@ -52,34 +52,26 @@ def clustering_KMeans(inputData, selectedColumns,numClusters):
 
     # Export Script
     exportScript = """
-    fig = []
     kmeans = KMeans(n_clusters=numClusters)
     selectedData = inputData[selectedColumns]
     cluster_assignments = kmeans.fit_predict(selectedData)
-    #? Create data analysis HTML report
     cluster_centers = kmeans.cluster_centers_
     inertia = kmeans.inertia_
 
+    print("Cluster Statistics:")
+    print(f"Number of Clusters (K): {numClusters}")
+    print(f"Cluster Centers:\n{cluster_centers}")
+    print(f"Inertia (Within-cluster Sum of Squares): {inertia}")
 
-    statistics = html.Div([
-        html.H4("Cluster Statistics:"),
-        html.P(f"Number of Clusters (K): {numClusters}"),
-        html.P(f"Cluster Centers:\n{cluster_centers}"),
-        html.P(f"Inertia (Within-cluster Sum of Squares): {inertia}")
-    ])
-    #? Generate Plot if 2D, Else return Scatter Matrix and Cluster Profile
     if(len(selectedColumns)==2):
         scatter_plot = px.scatter(selectedData, x=selectedColumns[0], y=selectedColumns[1], color=cluster_assignments, title='K-means Clustering')
         scatter_plot.update_layout(title='K-means Clustering - Scatter Plot')
-        fig.append(scatter_plot)
     else:
         pair_plot = px.scatter_matrix(selectedData, dimensions=selectedColumns, color=cluster_assignments)        
         pair_plot.update_layout(title='K-means Clustering - Pair Plots')
         cluster_profile = pd.DataFrame(cluster_centers, columns=selectedData.columns)
         bar_plot = px.bar(cluster_profile)
         bar_plot.update_layout(title='K-means Clustering - Cluster Profile')
-        fig.append(bar_plot)
-        fig.append(pair_plot)
     """.format(inputData=inputData, selectedColumns=selectedColumns, numClusters=numClusters)
     return fig, statistics
 
@@ -98,7 +90,6 @@ def classification_SVM(inputData, selectedColumns, targetColumn,kernel):
     y_pred = classifier.predict(X_test)
     # Calculate confusion matrix and classification report
     cm = confusion_matrix(y_test, y_pred)
-    # fig.append(cm)
     class_report = classification_report(y_test, y_pred, output_dict=True)
 
     # Create data analysis HTML report 
@@ -126,27 +117,20 @@ def classification_SVM(inputData, selectedColumns, targetColumn,kernel):
     fig = []
     selectedData = inputData[selectedColumns]
 
-    # Split the data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(selectedData, inputData[targetColumn], test_size=0.2, random_state=42)
-    # Create and train SVM Classifier 
     classifier = svm.SVC(kernel=kernel) 
     classifier.fit(X_train, y_train)
-    # Predict labels on the test data
     y_pred = classifier.predict(X_test)
-    # Calculate confusion matrix and classification report
     cm = confusion_matrix(y_test, y_pred)
-    # fig.append(cm)
     class_report = classification_report(y_test, y_pred, output_dict=True)
 
-    # Create data analysis HTML report 
-    statistics = html.Div([
-        html.H4("Classification Statistics:"),
-        html.P(f"Precision: {class_report['weighted avg']['precision']}"),
-        html.P(f"Recall: {class_report['weighted avg']['recall']}"),
-        html.P(f"F1-Score: {class_report['weighted avg']['f1-score']}"),
-        html.P(f"Support: {class_report['weighted avg']['support']}")
-      ])
-        # Create the confusion matrix plot
+    
+    print("Classification Statistics:")
+    print(f"Precision: {class_report['weighted avg']['precision']}")
+    print(f"Recall: {class_report['weighted avg']['recall']}")
+    print(f"F1-Score: {class_report['weighted avg']['f1-score']}")
+    print(f"Support: {class_report['weighted avg']['support']}")
+    
     figure = generateConfusionMatrix(cm,class_labels=classifier.classes_)
     figure.update_layout(title='SVM Classification - Confusion Matrix')
     fig.append(figure)
