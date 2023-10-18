@@ -180,7 +180,23 @@ layout = html.Div([
                     ], width=10)
                 ], className='mb-4'),
             ]),
-
+            dbc.Tab(label='State Summary', children=[
+                html.Ul(id='action-list'),
+                html.Button('Export Commands to .py File', id='export-commands-button', className='mt-3 mb-4', style={
+                    'alignItems': 'center',
+                    'justifyContent': 'center',
+                    'width': '100%',
+                    'height': '40px',
+                    'borderWidth': '1px',
+                    'borderRadius': '5px',
+                    'margin': '10px'
+                }),
+                dcc.Interval(
+                    id='update-interval',
+                    interval=10 * 1000,  # Update every 10 seconds (adjust as needed)
+                    n_intervals=0
+                )
+            ]),
         ]),
     ]),
 ])

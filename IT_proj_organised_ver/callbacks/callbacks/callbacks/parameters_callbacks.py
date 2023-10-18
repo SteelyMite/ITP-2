@@ -24,12 +24,14 @@ from sklearn import svm
 from sklearn.metrics import confusion_matrix, classification_report
 
 from app_instance import app
+from state_saving_func import *
 
 @app.callback(
     Output('input-dict-store', 'data'),
     [Input('data-analysis-dropdown', 'value')]
 )
 def update_input_dict_store(selected_analysis_method):
+    add_callback_source_code(update_input_dict_store)
     if selected_analysis_method == 'clustering':
         return [
             {

@@ -25,6 +25,10 @@ from sklearn.metrics import confusion_matrix, classification_report
 
 from data_analysis_func import clustering_KMeans, classification_SVM, generateConfusionMatrix, generateAUC
 from app_instance import app
+from state_saving_func import *
+
+# from cluster_class_callbacks import classification_SVM
+
 
 @app.callback(
     Output('dynamic-input-div', 'children'),
@@ -33,6 +37,7 @@ from app_instance import app
      State('stored-data', 'data')]  # Adjusted data reference
 )
 def generate_input(n_clicks, input_dicts, df_data):
+    add_callback_source_code(generate_input)
     # Only generate inputs when the button is clicked
     if n_clicks is None or n_clicks == 0:
         return []
@@ -108,6 +113,7 @@ CLASSIFICATION_INPUT_MAPPING = {
     State('data-analysis-dropdown', 'value')  
 )
 def perform_operation(n_clicks, dynamic_input_children, input_dicts, stored_data, method):
+    add_callback_source_code(perform_operation)
     if n_clicks is None:
         raise dash.exceptions.PreventUpdate
     
@@ -142,6 +148,7 @@ def perform_operation(n_clicks, dynamic_input_children, input_dicts, stored_data
         # Call clustering function and get results
         fig, stats = clustering_KMeans(input_data, selected_columns, num_clusters)
         print('called clustering')
+        log_user_action(f"Data Analysis: Clustering Performed")
         # Combine Plotly figures and HTML components for display
         children_components = [
             dbc.Row([
@@ -163,6 +170,7 @@ def perform_operation(n_clicks, dynamic_input_children, input_dicts, stored_data
         figs, stats = classification_SVM(input_data, features_columns, target_column, kernel_type)
         # Combine Plotly figures and HTML components for display
         print('called classification')
+        log_user_action(f"Data Analysis: Classification Performed")
         children_components = [
             dbc.Row([
                 dbc.Col(dcc.Graph(figure=fig_item), width=6) for fig_item in figs

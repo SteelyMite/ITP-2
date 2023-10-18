@@ -6,21 +6,26 @@ from dash.dependencies import Input, Output, State, ALL
 
 from app_instance import app
 from utils import parse_contents
+from state_saving_func import *
 
 @app.callback(
     [Output('output-data-upload', 'children'), 
      Output('error-message', 'children'), 
      Output('stored-data', 'data', allow_duplicate=True)],
     Input('upload-data', 'contents'),
+    State('upload-data', 'filename'),
     State('file-type-dropdown', 'value'),
     prevent_initial_call=True
 )
-def update_output(contents, file_type):
+def update_output(contents, filename, file_type):
+    add_callback_source_code(update_output)
     if contents is None:
         raise dash.exceptions.PreventUpdate
 
     try:
         df = parse_contents(contents, file_type)
+        command = f"Uploaded file: {filename}"  # Include the filename in the command
+        log_user_action(command)
         data_table = dash_table.DataTable(
             id='table',
             data=df.to_dict('records'),
@@ -39,31 +44,7 @@ def update_output(contents, file_type):
     prevent_initial_call=True
 )
 def update_stored_data(edited_data):
+    add_callback_source_code(update_stored_data)
     return edited_data
 
-@app.callback(
-    Output('download', 'data'),
-    Input('save-button', 'n_clicks'),
-    State('stored-data', 'data'),  
-    State('export-format-dropdown', 'value'),
-    prevent_initial_call=True
-)
-def save_to_file(n_clicks, stored_data, export_format):
-    if n_clicks is None:
-        raise dash.exceptions.PreventUpdate
-
-    df_to_save = pd.DataFrame(stored_data)  # Convert stored_data to DataFrame
-    if export_format == 'csv':
-        csv_string = df_to_save.to_csv(index=False, encoding='utf-8')
-        return dict(content=csv_string, filename="edited_data.csv")
-    elif export_format == 'xlsx':
-        xlsx_io = io.BytesIO()
-        df_to_save.to_excel(xlsx_io, index=False, engine='openpyxl')
-        xlsx_io.seek(0)
-        # Encode the Excel data to base64
-        xlsx_base64 = base64.b64encode(xlsx_io.getvalue()).decode('utf-8')
-        return dict(content=xlsx_base64, filename="edited_data.xlsx", type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", base64=True)
-    elif export_format == 'json':
-        json_string = df_to_save.to_json(orient='records')
-        return dict(content=json_string, filename="edited_data.json")
 

@@ -15,7 +15,7 @@ button {
     border-radius: 5px;
     margin: 10px;
     height: 40px;
-    background-color: #007bffbe;
+    background-color: #007bff;
     color: white;
     border: none;
     cursor: pointer;
@@ -44,5 +44,5 @@ button {
 }
 
 .custom-button:hover {
-    background-color: #2500df;  /* Change to desired hover color */
+    background-color: #e0e0e0;  /* Change to desired hover color */
 }

@@ -9,8 +9,10 @@ import dash_bootstrap_components as dbc
 import json
 
 
+
 from app_instance import app
 from utils import parse_contents
+from state_saving_func import *
 
 
 @app.callback(
@@ -22,6 +24,7 @@ from utils import parse_contents
     prevent_initial_call=True
 )
 def update_dropdown_output(stored_data):
+    add_callback_source_code(update_dropdown_output)
     if not stored_data:
         return [], [], [], []
 
@@ -42,6 +45,7 @@ def update_dropdown_output(stored_data):
     State('stored-data', 'data')  # Fetch data from dcc.Store
 )
 def update_graph(x_column, y_column, vis_type, data):
+    add_callback_source_code(update_graph)
     if not data or not x_column or not y_column or not vis_type:
         return {}
 
@@ -65,6 +69,8 @@ def update_graph(x_column, y_column, vis_type, data):
         fig = px.violin(df, x=x_column, y=y_column)
     else:
         return {}
+    log_user_action(f"Updated visualization: {vis_type}")
+    log_user_action(f"Command: fig = px.{vis_type}(df, x={x_column}, y={y_column})")
 
     return fig
 
@@ -75,10 +81,13 @@ def update_graph(x_column, y_column, vis_type, data):
     State('saved-visgraphs-container', 'children')
 )
 def save_current_graph(n_clicks, current_figure, current_saved_graphs):
+    add_callback_source_code(save_current_graph)
     if not current_figure:
         raise dash.exceptions.PreventUpdate
     current_graph = dcc.Graph(figure=current_figure)
+    log_user_action(f"Save Graph: current_graph = dcc.Graph(figure=current_figure)")
     if not current_saved_graphs:
         current_saved_graphs = []
     current_saved_graphs.append(current_graph)
+    log_user_action(f"Save Graph: current_saved_graphs.append(current_graph)")
     return current_saved_graphs

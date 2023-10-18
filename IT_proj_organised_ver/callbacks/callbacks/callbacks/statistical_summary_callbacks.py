@@ -10,6 +10,7 @@ import json
 
 from app_instance import app
 from utils import generate_column_summary_box
+from state_saving_func import *
 
 
 @app.callback(
@@ -21,6 +22,8 @@ from utils import generate_column_summary_box
 )
 def update_summary(data, n_clicks_convert, n_clicks_clean):
     df = pd.DataFrame(data)
+
+    add_callback_source_code(update_summary)
 
     # Generate the summary boxes
     summary_boxes = [generate_column_summary_box(df, column_name) for column_name in df.columns]
@@ -48,6 +51,8 @@ def update_summary(data, n_clicks_convert, n_clicks_clean):
 )
 def handle_dropdown_actions(n_clicks_convert, n_clicks_clean, stored_data):
     # Get the triggering input (i.e., which dropdown item was clicked)
+    add_callback_source_code(handle_dropdown_actions)
+
     ctx = dash.callback_context
     if not ctx.triggered:
         raise dash.exceptions.PreventUpdate
@@ -72,29 +77,38 @@ def handle_dropdown_actions(n_clicks_convert, n_clicks_clean, stored_data):
                 df[column_name] = temp_series
         else:
             df[column_name] = df[column_name].astype(str)
-    
+
     elif prop_info['type'] == "clean":
         if prop_info['action'] == "min":
             df[column_name].fillna(df[column_name].min(), inplace=True)
+            log_user_action(f"df[{column_name}].fillna(df[{column_name}].min(), inplace=True)")
         elif prop_info['action'] == "max":
             df[column_name].fillna(df[column_name].max(), inplace=True)
+            log_user_action(f"df[{column_name}].fillna(df[{column_name}].max(), inplace=True)")
         elif prop_info['action'] == "mean":
             df[column_name].fillna(df[column_name].mean(), inplace=True)
+            log_user_action(f"df[{column_name}].fillna(df[{column_name}].mean(), inplace=True)")
         elif prop_info['action'] == "zero":
             df[column_name].fillna(0, inplace=True)
+            log_user_action(f"df[{column_name}].fillna(0, inplace=True)")
         elif prop_info['action'] == "na_string":
             df[column_name].fillna('N/A', inplace=True)
+            log_user_action(f" df[{column_name}].fillna('N/A', inplace=True)")
         elif prop_info['action'] == "most_frequent":
             most_frequent = df[column_name].mode().iloc[0] if not df[column_name].empty else "N/A"
             df[column_name].fillna(most_frequent, inplace=True)
+            log_user_action(f"df[{column_name}].fillna({most_frequent}, inplace=True)")
         # Handle normalization actions
         elif prop_info['action'] == "normalize_new":
             normalized_col_name = "normalized_" + column_name
             normalized_values = (df[column_name] - df[column_name].min()) / (df[column_name].max() - df[column_name].min())
             df[normalized_col_name] = normalized_values.round(3)
+            log_user_action(f"df[{normalized_col_name}] = normalized_values.round(3)")
         elif prop_info['action'] == "normalize_replace":
             normalized_values = (df[column_name] - df[column_name].min()) / (df[column_name].max() - df[column_name].min())
             df[column_name] = normalized_values.round(3)
+            log_user_action(f"df[{column_name}] = normalized_values.round(3)")
+
     return [df.to_dict('records')]
 
 @app.callback(
@@ -104,6 +118,7 @@ def handle_dropdown_actions(n_clicks_convert, n_clicks_clean, stored_data):
     prevent_initial_call=True
 )
 def update_table_from_store(ts, stored_data):
+    add_callback_source_code(update_table_from_store)
     if ts is None or not stored_data:
         raise dash.exceptions.PreventUpdate
 
