@@ -1,3 +1,10 @@
+"""
+File:           layout.py
+Description:    Main layout and components for the PyExploratory application.
+Authors:        Chitipat Marsri, Diego Disley, Don Le, Kyle Welsh
+Date Updated:   2023-10-18 
+"""
+# Import required modules
 import base64
 import io
 import dash
@@ -9,21 +16,25 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 from app_instance import app
 
+# Define the navbar component
 navbar = dbc.NavbarSimple(
     brand="PyExploratory",
-    brand_href="/", 
+    brand_href="/",
     sticky="top",
 )
 
+# Define the main layout of the application
 layout = html.Div([
-    navbar,
-    dcc.Store(id='stored-data'), # store the uploaded data
+    navbar,  # Navbar at the top
+    dcc.Store(id='stored-data'),  # Used to store uploaded data
+    
+    # Main container for the tabs
     dbc.Container([
         dbc.Tabs([
-            # Tab 1: Import, Export, DataFrame Display
+            # Tab 1: Data Management
             dbc.Tab(label='Data Management', children=[
                 dbc.Row([
-                    # Import File Type Dropdown
+                    # Dropdown for choosing import file type
                     dbc.Col([
                         dcc.Dropdown(
                             id='file-type-dropdown',
@@ -37,7 +48,8 @@ layout = html.Div([
                             className='custom-dropdown'
                         ),
                     ], width=3),
-                    # Upload Data Section
+                    
+                    # Component to upload data
                     dbc.Col([
                         dcc.Upload(
                             id='upload-data',
@@ -59,7 +71,8 @@ layout = html.Div([
                         ),
                         html.Div(id='error-message', style={'color': 'red'}),
                     ], width=3),
-                    # Export File Type Dropdown
+                    
+                    # Dropdown for choosing export file type
                     dbc.Col([
                         dcc.Dropdown(
                             id='export-format-dropdown',
@@ -73,27 +86,31 @@ layout = html.Div([
                             className='custom-dropdown'
                         ),
                     ], width=3),
-                    # Save Button and Download Component
+                    
+                    # Save button and download component
                     dbc.Col([
                         html.Button('Save', id='save-button', className='custom-button'),
                         dcc.Download(id="download")
                     ], width=3)
                 ]),
-                # DataTable to Display Uploaded Data
+                
+                # DataTable to display the uploaded data
                 html.Div([
                     dash_table.DataTable(id='datatable-upload-container')
                 ], style={'display': 'none'}),
+                
                 html.Div(id='output-data-upload'),
             ]),
+            
             # Tab 2: Statistical Summary
             dbc.Tab(label='Statistical Summary', children=[
                 html.Div(id='summary-output'),
             ]),
-            # Tab 3: Visualisation Summary
+            
+            # Tab 3: Visualization
             dbc.Tab(label='Visualisation', children=[
-                # column selection
                 dbc.Row([
-                    # x axis column
+                    # Dropdown for X-axis column selection
                     dbc.Col([
                         html.Label('Select X-axis column:'),
                         dcc.Dropdown(
@@ -104,7 +121,8 @@ layout = html.Div([
                             className='custom-dropdown'
                         )
                     ], width=4),
-                    # y axis column
+                    
+                    # Dropdown for Y-axis column selection
                     dbc.Col([
                         html.Label('Select Y-axis column:'),
                         dcc.Dropdown(
@@ -115,7 +133,8 @@ layout = html.Div([
                             className='custom-dropdown'
                         ),
                     ], width=4),
-                    # graph type
+                    
+                    # Dropdown for visualization type selection
                     dbc.Col([
                         html.Label('Select visualization type:'),
                         dcc.Dropdown(
@@ -136,26 +155,28 @@ layout = html.Div([
                         ),
                     ], width=4)
                 ], className='mb-4'),
-                # Visualization
+                
+                # Visualization display area
                 dbc.Row([
                     dbc.Col([
-                        dcc.Graph(id='visualisation-graph')  # display the selected visualization
+                        dcc.Graph(id='visualisation-graph')
                     ])
                 ], className='mb-4'),
-                # Save Graph Button
+                
+                # Save graph button
                 dbc.Row([
                     dbc.Col([
-                        
                     ], width=3)
                 ], className='mb-4'),
-                html.Button('Save Graph', id='save-graph-button', className='custom-button'), 
-                html.Div(id='saved-visgraphs-container')
                 
+                html.Button('Save Graph', id='save-graph-button', className='custom-button'),
+                html.Div(id='saved-visgraphs-container')
             ]),
-            # Tab 4: Analytics Summary
+            
+            # Tab 4: Analytics
             dbc.Tab(label='Analytics', children=[
-                # Data Analysis Choice
                 dbc.Row([
+                    # Dropdown for data analysis method selection
                     dbc.Col([
                         html.Label("Choose Data Analysis Method:"),
                         dcc.Dropdown(
@@ -170,6 +191,7 @@ layout = html.Div([
                         )
                     ], width=4),                
                 ], className='mb-4'),
+                
                 dbc.Row([
                     dbc.Col([
                         dcc.Store(id='input-dict-store', data=[]),
@@ -177,28 +199,22 @@ layout = html.Div([
                         html.Div(id='dynamic-input-div'),
                         html.Button('Perform', id='perform-button', className='custom-button'),
                         html.Div(id='perform-result-div', style={'color': 'green', 'margin-top': '10px'}),
-                    ], width=10)
+                    ],)
                 ], className='mb-4'),
             ]),
+            
+            # Tab 5: State Summary
             dbc.Tab(label='State Summary', children=[
                 html.Ul(id='action-list'),
-                html.Button('Export Commands to .py File', id='export-commands-button', className='mt-3 mb-4', style={
-                    'alignItems': 'center',
-                    'justifyContent': 'center',
-                    'width': '100%',
-                    'height': '40px',
-                    'borderWidth': '1px',
-                    'borderRadius': '5px',
-                    'margin': '10px'
-                }),
+                html.Button('Export Commands to .py File', id='export-commands-button', className='custom-button'),
+                
+                # Interval component to update the state summary
                 dcc.Interval(
                     id='update-interval',
-                    interval=10 * 1000,  # Update every 10 seconds (adjust as needed)
+                    interval=10 * 1000,  # Update every 10 seconds
                     n_intervals=0
                 )
             ]),
         ]),
     ]),
 ])
-
-                     

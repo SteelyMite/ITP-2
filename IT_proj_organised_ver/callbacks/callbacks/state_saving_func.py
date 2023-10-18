@@ -1,3 +1,9 @@
+"""
+File:           state_saving_func.py
+Description:    Functions to capture and save user actions for the PyExploratory application.
+Authors:        Chitipat Marsri, Diego Disley, Don Le, Kyle Welsh
+Date Updated:   2023-10-18 
+"""
 import base64
 import io
 import pandas as pd
@@ -7,24 +13,53 @@ from dash.dependencies import Input, Output, State, ALL
 import dash_bootstrap_components as dbc
 import inspect
 
+# Lists to store user actions and script details
 user_actions = []
 script_list = []
 
 def get_function_source_code(function):
+    """
+    Fetch the source code of a given function.
+    
+    Args:
+    - function (function): A reference to the function whose source code is to be fetched.
+    
+    Returns:
+    - str: Source code of the function.
+    """
     source_code = inspect.getsource(function)
     return source_code
 
 def add_callback_source_code(callback_func):
+    """
+    Capture the source code of a callback function and add it to the script list.
+    
+    Args:
+    - callback_func (function): A reference to the callback function whose source code is to be added.
+    """
     source_code = inspect.getsource(callback_func)
     script_list.append(source_code)
 
 def log_user_action(action, filename=None):
+    """
+    Log the user action to the user_actions list. If a filename is provided, it's included in the log.
+    
+    Args:
+    - action (str): Description of the user's action.
+    - filename (str, optional): Filename associated with the action. Defaults to None.
+    """
     if filename:
         user_actions.append(f"{action} ({filename})")
     else:
         user_actions.append(action)
 
 def save_user_actions_to_py_file(filename):
+    """
+    Save the captured user actions to a specified .py file.
+    
+    Args:
+    - filename (str): The name of the file where the actions will be saved.
+    """
     with open(filename, "w") as file:
         file.write("# User Actions\n")
         file.write("user_actions = [\n")
@@ -33,6 +68,17 @@ def save_user_actions_to_py_file(filename):
         file.write("]\n")
 
 def write_callback_functions_to_file(filename):
+    """
+    Write the captured callback functions' source code to a specified .py file. 
+    
+    This function first writes a list of necessary imports and then iterates over 
+    the script_list to add each callback's source code to the file. Finally, 
+    it adds a conditional statement to run the app in debug mode if this 
+    script is executed as the main module.
+
+    Args:
+    - filename (str): The name of the file where the callback functions' source code will be saved.
+    """
     # List of imports
     imports = [
         "import base64",
@@ -436,28 +482,20 @@ def write_callback_functions_to_file(filename):
         "",
         "def classification_SVM(inputData, selectedColumns, targetColumn, kernel):",
         "    fig = []",
-        "    print('1')",
         "    selectedData = inputData[selectedColumns]",
         "    # Split the data into training and testing sets",
         "    X_train, X_test, y_train, y_test = train_test_split(selectedData, inputData[targetColumn], test_size=0.2, random_state=42)",
         "    # Create and train SVM Classifier ",
         "    y_train = y_train.values.ravel()",
-        "    print('1.5')",
         "    y_test = y_test.values.ravel()",
-        "    print('2')",
         "    classifier = svm.SVC(kernel=kernel) #!Make sure to update kernel type",
-        "    print('3')",
         "    classifier.fit(X_train, y_train)",
-        "    print('4')",
         "    # Predict labels on the test data",
         "    y_pred = classifier.predict(X_test)",
-        "    print('5')",
         "    # Calculate confusion matrix and classification report",
         "    cm = confusion_matrix(y_test, y_pred)",
-        "    print('6')",
         "    # fig.append(cm)",
         "    class_report = classification_report(y_test, y_pred, output_dict=True)",
-        "    print('7')",
         "    # Create data analysis HTML report ",
         "    statistics = html.Div([",
         "        html.H4('Classification Statistics:'),",
@@ -467,13 +505,9 @@ def write_callback_functions_to_file(filename):
         "        html.P(f'Support: {class_report['weighted avg']['support']}')",
         "      ])",
         "        # Create the confusion matrix plot",
-        "    print('8')",
         "    figure = generateConfusionMatrix(cm, class_labels=classifier.classes_)",
-        "    print('9')",
         "    figure.update_layout(title='SVM Classification - Confusion Matrix')",
-        "    print('10')",
         "    fig.append(figure)",
-        "    print('11')",
         "    print(len(classifier.classes_)",
         "    #return fig, statistics",
         "    if len(classifier.classes_) == 2:",
@@ -481,9 +515,7 @@ def write_callback_functions_to_file(filename):
         "        y_test_bin = label_binarize(y_test, classes=classifier.classes_)",
         "        AUC_Plot =  generateAUC(y_test_bin, y_pred_bin)",
         "        AUC_Plot.update_layout(title='SVM Classification - Area Under Curve Plot')",
-        "        print('11.5')",
         "        fig.append(AUC_Plot)",
-        "    print('12')",
         "    return fig, statistics",
         "",
         "",
@@ -531,11 +563,11 @@ def write_callback_functions_to_file(filename):
     with open(filename, 'w' ,encoding='utf-8') as file:
         file.write("\n".join(imports))
 
+        # Write each callback's source code to the file
         for callback_source_code in script_list:
             file.write(callback_source_code)
             file.write("\n")
 
+        # Add conditional to run the app if this script is executed as the main module
         file.write("if __name__ == '__main__':\n")
         file.write("    app.run_server(debug=True)\n")
-
-

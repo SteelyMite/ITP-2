@@ -1,37 +1,27 @@
-from dash import Input, Output, html, dash_table, dcc
-import pandas as pd
-import base64
-import io
-from dash.dependencies import State, ALL
-import plotly.express as px
-import dash_bootstrap_components as dbc
-import json
-from sklearn.cluster import KMeans
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, silhouette_score
-import dash
-import plotly.graph_objs as go
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import StandardScaler
-from matplotlib import pyplot as plt
-import numpy as np
-import seaborn as sns
-import plotly.subplots as sp
-import plotly.figure_factory as ff
-from sklearn import svm
-from sklearn.metrics import confusion_matrix, classification_report
+"""
+File:           parameters_callbacks.py
+Description:    This module contains callbacks related to updating 
+                input parameters for different analysis methods.
 
+Authors:        Chitipat Marsri, Diego Disley, Don Le, Kyle Welsh
+Last Updated:   2023-10-18
+"""
+
+# Library imports
+import dash
+from dash import Input, Output
 from app_instance import app
 from state_saving_func import *
 
+# Callback to update the input parameters based on the selected analysis method
 @app.callback(
     Output('input-dict-store', 'data'),
     [Input('data-analysis-dropdown', 'value')]
 )
 def update_input_dict_store(selected_analysis_method):
-    add_callback_source_code(update_input_dict_store)
+    add_callback_source_code(update_input_dict_store)  # Log the current callback function for later use
+    
+    # Define input parameters for clustering analysis
     if selected_analysis_method == 'clustering':
         return [
             {
@@ -47,6 +37,8 @@ def update_input_dict_store(selected_analysis_method):
                 "AcceptableValues": {"min": 1, "max": None}
             }
         ]
+    
+    # Define input parameters for classification analysis
     elif selected_analysis_method == 'classification':
         return [
             {
@@ -68,7 +60,7 @@ def update_input_dict_store(selected_analysis_method):
                 "AcceptableValues": ["linear", "poly", "rbf", "sigmoid"]
             }
         ]
+    
+    # Handle other cases or invalid selections
     else:
-        # Handle other cases or invalid selections appropriately
         return []
-

@@ -1,3 +1,14 @@
+"""
+File:           statistical_summary_callbacks.py
+Description:    This module defines the callback functionalities related to generating 
+                statistical summaries, handling user actions on the data such as converting 
+                and cleaning columns, and displaying data updates in a table.
+                
+Authors:        Chitipat Marsri, Diego Disley, Don Le, Kyle Welsh
+Last Updated:   2023-10-18
+"""
+
+# Library imports
 import dash
 from dash import Input, Output, html, dash_table, dcc
 import pandas as pd
@@ -7,12 +18,11 @@ from dash.dependencies import Input, Output, State, ALL
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import json
-
 from app_instance import app
 from utils import generate_column_summary_box
 from state_saving_func import *
 
-
+# Callback to update the statistical summaries displayed to the user
 @app.callback(
     Output('summary-output', 'children'),
     [Input('stored-data', 'data'),
@@ -21,14 +31,15 @@ from state_saving_func import *
     prevent_initial_call=True
 )
 def update_summary(data, n_clicks_convert, n_clicks_clean):
+    # Convert stored data to DataFrame for further processing
     df = pd.DataFrame(data)
 
     add_callback_source_code(update_summary)
 
-    # Generate the summary boxes
+    # Generate statistical summaries for each column in the data
     summary_boxes = [generate_column_summary_box(df, column_name) for column_name in df.columns]
 
-    # Arrange the summary boxes in a 2-box-per-row layout
+    # Arrange these summaries in a grid layout
     rows = []
     for i in range(0, len(summary_boxes), 2):  # Step by 2 for pairs
         box1 = summary_boxes[i]
@@ -42,6 +53,7 @@ def update_summary(data, n_clicks_convert, n_clicks_clean):
 
     return rows
 
+# Callback to handle user actions from the dropdowns for column conversion and cleaning
 @app.callback(
     [Output('stored-data', 'data', allow_duplicate=True)],
     [Input({'type': 'convert', 'index': ALL, 'to': ALL}, 'n_clicks'),
@@ -50,9 +62,10 @@ def update_summary(data, n_clicks_convert, n_clicks_clean):
     prevent_initial_call=True
 )
 def handle_dropdown_actions(n_clicks_convert, n_clicks_clean, stored_data):
-    # Get the triggering input (i.e., which dropdown item was clicked)
+    # Record the source code and user action
     add_callback_source_code(handle_dropdown_actions)
 
+    # Get the context of the callback (which element triggered it)
     ctx = dash.callback_context
     if not ctx.triggered:
         raise dash.exceptions.PreventUpdate
@@ -61,14 +74,17 @@ def handle_dropdown_actions(n_clicks_convert, n_clicks_clean, stored_data):
     prop_id = ctx.triggered[0]['prop_id'].split('.')[0]
     prop_info = json.loads(prop_id)
 
+    # Retrieve the column on which the action is performed
     df = pd.DataFrame(stored_data)
     column_name = prop_info['index']
 
+    # Handle the convert and clean actions
+    # Convert actions convert column data types
+    # Clean actions fill missing data in columns
     if prop_info['type'] == "convert":
         if prop_info['to'] == "Numeric":
             # Convert the column to numeric
             temp_series = pd.to_numeric(df[column_name], errors='coerce')
-            
             # Check if there are any NaN values in the resulting series
             if temp_series.isna().any():
                 # If there are NaN values, then the conversion is not practical
@@ -111,6 +127,7 @@ def handle_dropdown_actions(n_clicks_convert, n_clicks_clean, stored_data):
 
     return [df.to_dict('records')]
 
+# Callback to update the data table visualization whenever there's a change in the stored data
 @app.callback(
     Output('output-data-upload', 'children', allow_duplicate=True),
     [Input('stored-data', 'modified_timestamp')],

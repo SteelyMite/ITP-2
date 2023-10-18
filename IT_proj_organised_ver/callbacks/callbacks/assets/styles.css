@@ -1,48 +1,86 @@
-/* General styles for the entire app */
+/*
+File:           styles.css
+Description:    This stylesheet defines the design and layout principles for the Dash web application.
+                It comprises of a set of styles to ensure consistency across the user interface.
+                The styles are categorized into sections for general page design, dropdown components,
+                and buttons. Custom classes for specific UI components like dropdowns and buttons
+                allow for unique styles where needed.
+                
+Authors:        Chitipat Marsri, Diego Disley, Don Le, Kyle Welsh
+Last Updated:   2023-10-18
+
+Table of Contents:
+1. General Styles - Default font settings and any overarching design decisions.
+2. Dropdown Styles - Styling for dropdown components.
+3. Button Styles - Styling for buttons, including hover effects.
+*/
+
+/* 
+=========================
+GENERAL STYLES
+=========================
+*/
+
+/* Sets the font for the entire app to Arial, with sans-serif as a fallback */
 body {
     font-family: Arial, sans-serif;
 }
 
-/* Style for all dropdown components */
+/* 
+=========================
+DROPDOWN STYLES
+=========================
+*/
+
+/* Sets styles that are common to all dropdown components in the app */
 .Select-control {
-    border-radius: 5px;
-    margin: 10px;
-    height: 40px;
+    border-radius: 5px;      /* Rounded corners for dropdowns */
+    margin: 10px;            /* Space around each dropdown */
+    height: 40px;            /* Fixed height for dropdowns */
 }
 
-/* Style for all buttons */
-button {
-    border-radius: 5px;
-    margin: 10px;
-    height: 40px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
+/* More specific styling for custom dropdowns */
 .custom-dropdown {
-    align-items: center;
-    justify-content: center;
-    width: 100%;
+    align-items: center;     /* Vertically center content */
+    justify-content: center; /* Horizontally center content */
+    width: 100%;             /* Full width for the dropdown */
     height: 40px;
-    border-width: 1px;
-    border-radius: 5px;
+    border-width: 1px;      /* Thin border for dropdown */
+    border-radius: 5px;     /* Rounded corners for dropdowns */
     margin: 10px;
 }
 
+/* 
+=========================
+BUTTON STYLES
+=========================
+*/
+
+/* Sets styles for all generic buttons */
+button {
+    border-radius: 5px;      /* Rounded corners for buttons */
+    margin: 10px;            /* Space around each button */
+    height: 40px;            /* Fixed height for buttons */
+    background-color: #007bff; /* Primary button color */
+    color: white;            /* Text color for the button */
+    border: none;            /* No border for a cleaner look */
+    cursor: pointer;         /* Changes the cursor to hand icon indicating it's clickable */
+}
+
+/* Additional styles for custom buttons */
 .custom-button {
-    align-items: center;
-    justify-content: center;
-    width: 100%;
+    align-items: center;     /* Vertically center content */
+    justify-content: center; /* Horizontally center content */
+    width: 100%;             /* Full width for the button */
     height: 40px;
-    border-width: 1px;
-    border-radius: 5px;
+    border-width: 1px;      /* Thin border for button */
+    border-radius: 5px;     /* Rounded corners for buttons */
     margin: 10px;
-    cursor: pointer;  /* Makes it clear it's clickable */
-    transition: background-color 0.3s;  /* Optional: smooth transition for hover effects */
+    cursor: pointer;        /* Changes the cursor to hand icon indicating it's clickable */
+    transition: background-color 0.3s; /* Smooth transition for button hover effect */
 }
 
+/* Hover effect for the custom button */
 .custom-button:hover {
-    background-color: #e0e0e0;  /* Change to desired hover color */
+    background-color: #e0e0e0;  /* Lighter color on hover */
 }

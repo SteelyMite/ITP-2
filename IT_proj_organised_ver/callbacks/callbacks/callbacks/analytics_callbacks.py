@@ -1,33 +1,25 @@
-from dash import Input, Output, html, dash_table, dcc
-import pandas as pd
-import base64
-import io
-from dash.dependencies import State, ALL
-import plotly.express as px
-import dash_bootstrap_components as dbc
-import json
-from sklearn.cluster import KMeans
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, silhouette_score
-import dash
-import plotly.graph_objs as go
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import StandardScaler
-from matplotlib import pyplot as plt
-import numpy as np
-import seaborn as sns
-import plotly.subplots as sp
-import plotly.figure_factory as ff
-from sklearn import svm
-from sklearn.metrics import confusion_matrix, classification_report
+"""
+File:           analytics_callbacks.py
+Description:    This module contains callbacks related to dynamic input generation 
+                and executing various data analysis operations based on user inputs.
 
-from data_analysis_func import clustering_KMeans, classification_SVM, generateConfusionMatrix, generateAUC
+Authors:        Chitipat Marsri, Diego Disley, Don Le, Kyle Welsh
+Last Updated:   2023-10-18
+"""
+
+# Library imports
+import dash
+from dash import Input, Output, dcc, html
+from dash.exceptions import PreventUpdate
+from dash.dependencies import State
+import pandas as pd
+import dash_bootstrap_components as dbc
+
+# Internal imports
+from data_analysis_func import clustering_KMeans, classification_SVM
 from app_instance import app
 from state_saving_func import *
 
-# from cluster_class_callbacks import classification_SVM
 
 
 @app.callback(
@@ -38,14 +30,14 @@ from state_saving_func import *
 )
 def generate_input(n_clicks, input_dicts, df_data):
     add_callback_source_code(generate_input)
-    # Only generate inputs when the button is clicked
+    # Validation
     if n_clicks is None or n_clicks == 0:
         return []
     if input_dicts is None:
         # Handle None case appropriately
         return html.P("No input configurations available")
     df = pd.DataFrame(df_data)  # Adjusted data conversion
-    
+    # Generate dynamic components based on the provided input dictionaries
     components = []
     
     for input_dict in input_dicts:
@@ -114,6 +106,7 @@ CLASSIFICATION_INPUT_MAPPING = {
 )
 def perform_operation(n_clicks, dynamic_input_children, input_dicts, stored_data, method):
     add_callback_source_code(perform_operation)
+    # Initial validation
     if n_clicks is None:
         raise dash.exceptions.PreventUpdate
     
@@ -163,9 +156,6 @@ def perform_operation(n_clicks, dynamic_input_children, input_dicts, stored_data
         features_columns = dynamic_input_children[CLASSIFICATION_INPUT_MAPPING['features_columns']]['props']['value']
         target_column = dynamic_input_children[CLASSIFICATION_INPUT_MAPPING['target_column']]['props']['value']
         kernel_type = dynamic_input_children[CLASSIFICATION_INPUT_MAPPING['kernel_type']]['props']['value']
-        print(features_columns)
-        print(target_column)
-        print(kernel_type)
         # Call classification function and get results
         figs, stats = classification_SVM(input_data, features_columns, target_column, kernel_type)
         # Combine Plotly figures and HTML components for display
